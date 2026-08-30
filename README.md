@@ -35,6 +35,16 @@ Adminsidan ligger på `dinsajt.vercel.app/admin`. Den är inte länkad från fö
 - Alla ord sorterade efter hur ofta de blir fel, med Gustavs faktiska felsvar
 - Varje runda för sig, utfällbar med exakt vilka ord som gick fel
 
+## Lyssna och öva uttal
+
+Orden kan läsas upp på spanska med webbläsarens inbyggda talsyntes (Web Speech API) – inga tjänster, inga nycklar, ingen kostnad.
+
+- **Öva uttal** på startsidan: alla ord i en lista, tryck på högtalaren för att höra ordet, eller "Spela upp alla".
+- **Lyssna → Svenska** som riktning i förhöret: ordet döljs och läses upp, man skriver den svenska betydelsen.
+- Högtalarknappen finns även vid spanska ord i förhöret och i resultatlistan.
+
+Rösten kommer från enheten. iPhone/iPad och Android har spanska röster inbyggda. På Windows behöver spanska läggas till under Inställningar → Tid och språk → Tal (eller använd Edge, som har egna röster).
+
 ## Byta glosor
 
 Listan `GLOSOR` ligger högst upp i `<script>`-taggen i `index.html`:

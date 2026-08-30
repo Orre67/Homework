@@ -277,7 +277,7 @@ function render(){
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
 const fmt = (ts, withTime) => new Date(ts).toLocaleString("sv-SE",
   withTime ? {dateStyle:"short", timeStyle:"short"} : {month:"numeric", day:"numeric"});
-const dirName = m => m==="sv-es" ? "Sv → Es" : m==="mix" ? "Blandat" : "Es → Sv";
+const dirName = m => m==="sv-es" ? "Sv → Es" : m==="mix" ? "Blandat" : m==="listen" ? "Lyssna" : "Es → Sv";
 
 /* ---------- Händelser ---------- */
 async function unlock(){

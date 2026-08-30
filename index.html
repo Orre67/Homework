@@ -161,6 +161,28 @@
     font-weight:700;color:var(--cobalt);margin:0 0 6px;
   }
 
+  /* ---------- uppläsning ---------- */
+  .say{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:44px;height:44px;border:2px solid var(--cobalt);background:#fff;
+    color:var(--cobalt);cursor:pointer;padding:0;vertical-align:middle;
+  }
+  .say:hover{background:#E7EDFA}
+  .say:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
+  .say svg{width:22px;height:22px;fill:currentColor}
+  .say.small{width:32px;height:32px;margin-right:8px}
+  .say.small svg{width:16px;height:16px}
+  .say-row{text-align:center;margin:-12px 0 20px}
+  #practiceBtn{margin-top:10px}
+  .practice{list-style:none;margin:0 0 18px;padding:0}
+  .practice li{
+    display:flex;align-items:center;gap:12px;
+    padding:10px 2px;border-bottom:1px solid var(--tile-shade);
+  }
+  .practice .es{font-family:var(--display);font-weight:600;font-size:1.15rem;flex:1}
+  .practice .sv{color:#6E6555;text-align:right}
+  .practice li.playing{background:#F0F4FD}
+
   footer{color:rgba(251,246,234,.5);font-size:.8rem;text-align:center;max-width:620px}
 
   @media (prefers-reduced-motion: reduce){
@@ -189,9 +211,22 @@
       <label class="mode"><input type="radio" name="mode" value="es-sv" checked> Spanska → Svenska</label>
       <label class="mode"><input type="radio" name="mode" value="sv-es"> Svenska → Spanska</label>
       <label class="mode"><input type="radio" name="mode" value="mix"> Blandat</label>
+      <label class="mode" id="listenMode"><input type="radio" name="mode" value="listen"> Lyssna → Svenska (ordet läses upp)</label>
     </div>
   </fieldset>
   <button class="btn" id="startBtn">Starta förhöret</button>
+  <button class="btn ghost" id="practiceBtn">Öva uttal – lyssna på orden</button>
+</section>
+
+<!-- ÖVA UTTAL -->
+<section class="card" id="practice" hidden>
+  <p class="lead">Tryck på högtalaren för att höra ordet på spanska.</p>
+  <ul class="practice" id="practiceList"></ul>
+  <p class="hint" id="voiceHint"></p>
+  <div class="row">
+    <button class="btn" id="playAllBtn">Spela upp alla</button>
+    <button class="btn ghost" id="practiceBackBtn">Tillbaka</button>
+  </div>
 </section>
 
 <!-- FÖRHÖR -->
@@ -200,6 +235,7 @@
   <p class="counter" id="counter">Ord 1 av 10</p>
   <p class="prompt-lang" id="promptLang">Spanska</p>
   <p class="word" id="word">—</p>
+  <div class="say-row" id="sayRow" hidden><button class="say" id="sayBtn" type="button" aria-label="Läs upp på spanska"></button></div>
   <input type="text" id="answer" placeholder="Skriv svaret" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
   <div class="feedback" id="feedback"></div>
   <div class="row">
@@ -253,10 +289,41 @@ const mosaic=el("mosaic"), counter=el("counter"), promptLang=el("promptLang"),
       wordEl=el("word"), input=el("answer"), feedback=el("feedback"),
       checkBtn=el("checkBtn"), revealBtn=el("revealBtn");
 
+/* ---------- Uppläsning (Web Speech API – inbyggt i webbläsaren) ---------- */
+const SPEAKER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3zm13.5 3c0-1.8-1-3.3-2.5-4v8c1.5-.7 2.5-2.2 2.5-4zM14 3.2v2.1c2.9.9 5 3.5 5 6.7s-2.1 5.8-5 6.7v2.1c4-.9 7-4.5 7-8.8s-3-7.9-7-8.8z"/></svg>';
+const TTS = "speechSynthesis" in window;
+let esVoice = null;
+
+function pickVoice(){
+  const all = speechSynthesis.getVoices();
+  const es  = all.filter(v => /^es([-_]|$)/i.test(v.lang));
+  esVoice = es.find(v => /es[-_]ES/i.test(v.lang)) || es[0] || null;
+  el("voiceHint").textContent = !all.length ? "" : esVoice
+    ? `Röst: ${esVoice.name}`
+    : "Ingen spansk röst hittades på den här enheten – uppläsningen kan låta fel.";
+}
+if(TTS){ pickVoice(); speechSynthesis.addEventListener("voiceschanged", pickVoice); }
+
+function speak(text){
+  return new Promise(done => {
+    if(!TTS){ done(); return; }
+    if(speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = esVoice ? esVoice.lang : "es-ES";
+    if(esVoice) u.voice = esVoice;
+    u.rate = 0.85;
+    u.onend = u.onerror = () => done();
+    speechSynthesis.speak(u);
+  });
+}
+const sayHtml = (text, cls="say small") =>
+  `<button class="${cls}" type="button" data-say="${text}" aria-label="Läs upp ${text}">${SPEAKER}</button>`;
+
 /* ---------- Läge ---------- */
 let queue=[], i=0, results=[], answered=false, mode="es-sv", who="";
 
 function directionFor(){
+  if(mode==="listen") return "es-sv";
   if(mode==="mix") return Math.random()<.5 ? "es-sv" : "sv-es";
   return mode;
 }
@@ -286,16 +353,19 @@ function render(){
   const g=queue[i];
   answered=false;
   counter.textContent = `Ord ${i+1} av ${queue.length}`;
-  promptLang.textContent = g.dir==="es-sv" ? "Spanska" : "Svenska";
-  wordEl.textContent = g.dir==="es-sv" ? g.es : g.sv;
+  const listen = mode==="listen";
+  promptLang.textContent = listen ? "Lyssna" : g.dir==="es-sv" ? "Spanska" : "Svenska";
+  wordEl.textContent = listen ? "• • •" : g.dir==="es-sv" ? g.es : g.sv;
   wordEl.classList.remove("anim"); void wordEl.offsetWidth; wordEl.classList.add("anim");
   input.value=""; input.disabled=false;
   input.placeholder = g.dir==="es-sv" ? "Svara på svenska" : "Svara på spanska";
   feedback.innerHTML="";
   checkBtn.textContent="Rätta";
   revealBtn.hidden=false;
+  el("sayRow").hidden = !(TTS && g.dir==="es-sv");
   paintMosaic();
   input.focus();
+  if(listen) speak(g.es);
 }
 
 function accepted(g){
@@ -311,6 +381,7 @@ function check(revealed){
   const correct = !revealed && given.trim()!=="" && accepted(g).includes(norm(given));
 
   results[i] = { es:g.es, sv:g.sv, correct, given:given.trim() };
+  if(mode==="listen") wordEl.textContent = g.es;
   answered=true;
   input.disabled=true;
   revealBtn.hidden=true;
@@ -319,6 +390,7 @@ function check(revealed){
   feedback.innerHTML = correct
     ? `<span class="ok">Rätt!</span><div class="hint">${g.es} — ${g.sv}</div>`
     : `<span class="no">${revealed ? "Rätt svar" : "Fel"}</span><div><b>${facit(g)}</b></div>`;
+  if(TTS && g.dir==="sv-es") feedback.innerHTML += `<div class="hint">${sayHtml(g.es)}Hör uttalet</div>`;
 
   paintMosaic();
   checkBtn.focus();
@@ -369,7 +441,7 @@ function finish(){
   results.forEach(r=>{
     const li=document.createElement("li");
     if(!r.correct) li.classList.add("miss");
-    li.innerHTML = `<span class="es">${r.es}</span><span class="sv">${r.sv}</span>`;
+    li.innerHTML = `<span class="es">${TTS ? sayHtml(r.es) : ""}${r.es}</span><span class="sv">${r.sv}</span>`;
     ul.appendChild(li);
   });
 
@@ -377,6 +449,37 @@ function finish(){
   el("missBtn").hidden = misses.length===0;
   el("missBtn").onclick = () =>
     start(GLOSOR.filter(g => misses.some(m => m.es===g.es)));
+}
+
+/* ---------- Öva uttal ---------- */
+let playingAll = false;
+
+function openPractice(){
+  const ul = el("practiceList"); ul.innerHTML = "";
+  GLOSOR.forEach(g => {
+    const li = document.createElement("li");
+    li.innerHTML = `${sayHtml(g.es)}<span class="es">${g.es}</span><span class="sv">${g.sv}</span>`;
+    ul.appendChild(li);
+  });
+  startCard.hidden = true; el("practice").hidden = false;
+}
+
+async function playAll(){
+  if(playingAll){ playingAll = false; speechSynthesis.cancel(); return; }
+  playingAll = true; el("playAllBtn").textContent = "Stoppa";
+  for(const li of el("practiceList").children){
+    if(!playingAll) break;
+    li.classList.add("playing"); li.scrollIntoView({block:"nearest"});
+    await speak(li.querySelector("[data-say]").dataset.say);
+    await new Promise(r => setTimeout(r, 700));
+    li.classList.remove("playing");
+  }
+  playingAll = false; el("playAllBtn").textContent = "Spela upp alla";
+}
+
+function closePractice(){
+  playingAll = false; if(TTS) speechSynthesis.cancel();
+  el("practice").hidden = true; startCard.hidden = false;
 }
 
 /* ---------- Händelser ---------- */
@@ -392,6 +495,13 @@ try{ el("who").value = localStorage.getItem("glosor:namn") || ""; }catch(e){}
 checkBtn.onclick = () => answered ? next() : check(false);
 revealBtn.onclick = () => check(true);
 el("againBtn").onclick = () => { doneCard.hidden=true; startCard.hidden=false; };
+el("practiceBtn").onclick = openPractice;
+el("practiceBackBtn").onclick = closePractice;
+el("playAllBtn").onclick = playAll;
+el("sayBtn").innerHTML = SPEAKER;
+el("sayBtn").onclick = () => speak(queue[i].es);
+document.addEventListener("click", e => { const b = e.target.closest("[data-say]"); if(b) speak(b.dataset.say); });
+if(!TTS){ el("practiceBtn").hidden = true; el("listenMode").hidden = true; }
 
 document.addEventListener("keydown", e => {
   if(e.key!=="Enter" || quizCard.hidden) return;
