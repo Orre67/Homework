@@ -20,8 +20,8 @@ Förhöret funkar direkt. Resultaten sparas då bara i Gustavs egen webbläsare,
 
 För att kunna se resultaten från din egen telefon:
 
-1. I Vercel: projektet → **Storage** → **Create Database** → välj en Redis-integration från Marketplace (Upstash har en gratisnivå som räcker med marginal här).
-2. Koppla databasen till projektet. Då sätts `KV_REST_API_URL` och `KV_REST_API_TOKEN` automatiskt.
+1. I Vercel: projektet → **Storage** → **Create Database** → välj **Neon** (Postgres) från Marketplace. Gratisplanen räcker med marginal här.
+2. Koppla databasen till projektet. Då sätts `DATABASE_URL` automatiskt. (Har du i stället skapat databasen direkt på neon.tech: lägg in dess connection string som `DATABASE_URL` under **Settings → Environment Variables**.)
 3. Lägg till en egen variabel under **Settings → Environment Variables**:
    `ADMIN_PIN` = koden du vill använda till adminsidan.
 4. Deploya om, så börjar rundorna sparas i molnet.

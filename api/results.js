@@ -1,44 +1,54 @@
 // Sparar och hämtar resultat från glosförhöret.
-// Lagring: Upstash Redis via REST (inga npm-paket behövs).
+// Lagring: Neon Postgres via SQL-över-HTTP (inga npm-paket behövs).
 //
 // Miljövariabler i Vercel:
-//   KV_REST_API_URL   + KV_REST_API_TOKEN     (sätts av Redis-integrationen)
-//   ADMIN_PIN                                  (din egen kod till adminsidan)
+//   DATABASE_URL   (sätts av Neon-integrationen)
+//   ADMIN_PIN      (din egen kod till adminsidan)
 
-const REDIS_URL   = process.env.KV_REST_API_URL   || process.env.UPSTASH_REDIS_REST_URL;
-const REDIS_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-const ADMIN_PIN   = process.env.ADMIN_PIN;
+const DATABASE_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+const ADMIN_PIN    = process.env.ADMIN_PIN;
 
-const KEY = "glosor:rundor";
+const TABLE = "glosor_rundor";
 const MAX_ROUNDS = 300;
 
-async function redis(command) {
-  const res = await fetch(REDIS_URL, {
+async function sql(query, params = []) {
+  const host = new URL(DATABASE_URL).hostname;
+  const res = await fetch(`https://${host}/sql`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${REDIS_TOKEN}`,
+      "Neon-Connection-String": DATABASE_URL,
       "Content-Type": "application/json"
     },
-    body: JSON.stringify(command)
+    body: JSON.stringify({ query, params })
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok || data.error) throw new Error(data.error || `Redis svarade ${res.status}`);
-  return data.result;
+  if (!res.ok) throw new Error(data.message || `Neon svarade ${res.status}`);
+  return data.rows || [];
 }
+
+const ensureTable = () => sql(
+  `CREATE TABLE IF NOT EXISTS ${TABLE} (
+     id   TEXT PRIMARY KEY,
+     ts   TIMESTAMPTZ NOT NULL DEFAULT now(),
+     data JSONB NOT NULL
+   )`
+);
 
 const str = (v, max) => String(v ?? "").slice(0, max);
 
 module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
 
-  if (!REDIS_URL || !REDIS_TOKEN) {
+  if (!DATABASE_URL) {
     return res.status(503).json({
       error: "ingen-lagring",
-      message: "Ingen databas kopplad. Lägg till en Redis-integration i Vercel."
+      message: "Ingen databas kopplad. Lägg till en Neon-integration i Vercel."
     });
   }
 
   try {
+    await ensureTable();
+
     /* ---- Spara en runda ---- */
     if (req.method === "POST") {
       const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
@@ -61,8 +71,11 @@ module.exports = async (req, res) => {
         }))
       };
 
-      await redis(["LPUSH", KEY, JSON.stringify(round)]);
-      await redis(["LTRIM", KEY, "0", String(MAX_ROUNDS - 1)]);
+      await sql(`INSERT INTO ${TABLE} (id, ts, data) VALUES ($1, $2, $3)`,
+                [round.id, round.ts, JSON.stringify(round)]);
+      await sql(`DELETE FROM ${TABLE} WHERE id NOT IN
+                   (SELECT id FROM ${TABLE} ORDER BY ts DESC LIMIT $1)`,
+                [MAX_ROUNDS]);
       return res.status(201).json({ ok: true, id: round.id });
     }
 
@@ -78,12 +91,12 @@ module.exports = async (req, res) => {
       if (pin !== ADMIN_PIN) return res.status(401).json({ error: "fel-pin" });
 
       if (req.method === "DELETE") {
-        await redis(["DEL", KEY]);
+        await sql(`DELETE FROM ${TABLE}`);
         return res.status(200).json({ ok: true });
       }
 
-      const raw = (await redis(["LRANGE", KEY, "0", String(MAX_ROUNDS - 1)])) || [];
-      const rounds = raw.map(r => { try { return JSON.parse(r); } catch { return null; } }).filter(Boolean);
+      const rows = await sql(`SELECT data FROM ${TABLE} ORDER BY ts DESC LIMIT $1`, [MAX_ROUNDS]);
+      const rounds = rows.map(r => (typeof r.data === "string" ? JSON.parse(r.data) : r.data)).filter(Boolean);
       return res.status(200).json({ rounds });
     }
 
