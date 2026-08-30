@@ -98,6 +98,7 @@
   details summary::-webkit-details-marker{display:none}
   summary:focus-visible{outline:3px solid var(--saffron)}
   .when{font-size:.95rem}
+  .who{font-weight:700}
   .badge{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-left:8px}
   .res{font-family:var(--display);font-weight:600;font-size:1.1rem;white-space:nowrap}
   .res.good{color:var(--verde)} .res.mid{color:var(--cobalt)} .res.low{color:var(--rojo)}
@@ -204,7 +205,7 @@ function render(){
     el("sLast").textContent = "–";
     el("trend").innerHTML = "";
     el("hard").innerHTML = '<li class="empty">Inga rundor gjorda än.</li>';
-    el("rounds").innerHTML = '<li class="empty">Historiken fylls på när Gustav kört förhöret.</li>';
+    el("rounds").innerHTML = '<li class="empty">Historiken fylls på när någon kört förhöret.</li>';
     return;
   }
 
@@ -265,7 +266,7 @@ function render(){
       : "<div>Alla rätt.</div>";
     return `<li><details>
       <summary>
-        <span class="when">${fmt(r.ts, true)}<span class="badge">${dirName(r.mode)}</span></span>
+        <span class="when"><span class="who">${esc(r.who || "")}</span> · ${fmt(r.ts, true)}<span class="badge">${dirName(r.mode)}</span></span>
         <span class="res ${cls}">${r.right}/${r.total}</span>
       </summary>
       <div class="detail">${body}</div>

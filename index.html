@@ -180,6 +180,10 @@
 <section class="card" id="start">
   <p class="lead">Skriv den rätta översättningen. Enter rättar och går vidare.</p>
   <fieldset>
+    <legend>Vem kör?</legend>
+    <input type="text" id="who" placeholder="Skriv ditt namn" autocomplete="name" autocapitalize="words" maxlength="40" enterkeyhint="go">
+  </fieldset>
+  <fieldset>
     <legend>Riktning</legend>
     <div class="modes">
       <label class="mode"><input type="radio" name="mode" value="es-sv" checked> Spanska → Svenska</label>
@@ -250,7 +254,7 @@ const mosaic=el("mosaic"), counter=el("counter"), promptLang=el("promptLang"),
       checkBtn=el("checkBtn"), revealBtn=el("revealBtn");
 
 /* ---------- Läge ---------- */
-let queue=[], i=0, results=[], answered=false, mode="es-sv";
+let queue=[], i=0, results=[], answered=false, mode="es-sv", who="";
 
 function directionFor(){
   if(mode==="mix") return Math.random()<.5 ? "es-sv" : "sv-es";
@@ -328,7 +332,7 @@ function next(){
 /* ---------- Spara rundan ---------- */
 function saveRound(){
   const round = {
-    who:"Gustav",
+    who,
     mode,
     items: results.map((r,n)=>({
       es:r.es, sv:r.sv, dir:queue[n].dir, correct:r.correct, given:r.given
@@ -377,9 +381,14 @@ function finish(){
 
 /* ---------- Händelser ---------- */
 el("startBtn").onclick = () => {
+  who = el("who").value.trim().slice(0,40);
+  if(!who){ el("who").placeholder="Skriv ditt namn först"; el("who").focus(); return; }
+  try{ localStorage.setItem("glosor:namn", who); }catch(e){}
   mode = document.querySelector('input[name=mode]:checked').value;
   start(GLOSOR);
 };
+el("who").addEventListener("keydown", e => { if(e.key==="Enter") el("startBtn").click(); });
+try{ el("who").value = localStorage.getItem("glosor:namn") || ""; }catch(e){}
 checkBtn.onclick = () => answered ? next() : check(false);
 revealBtn.onclick = () => check(true);
 el("againBtn").onclick = () => { doneCard.hidden=true; startCard.hidden=false; };
