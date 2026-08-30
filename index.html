@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Glosförhör · Spanska</title>
+<meta name="description" content="Glosförhör i spanska – 10 glosor.">
+<meta name="theme-color" content="#10305F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Familjen+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cobalt:#1B4BA8;
+    --cobalt-deep:#10305F;
+    --ink:#0B1B33;
+    --tile:#FBF6EA;
+    --tile-shade:#EFE6D2;
+    --saffron:#F2B705;
+    --verde:#0E8C7F;
+    --rojo:#C93B2B;
+    --display:"Bricolage Grotesque", Georgia, serif;
+    --body:"Familjen Grotesk", system-ui, -apple-system, sans-serif;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+
+  body{
+    min-height:100svh;
+    font-family:var(--body);
+    color:var(--ink);
+    background-color:var(--cobalt-deep);
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.09' stroke-width='1.6'%3E%3Cpath d='M40 4 L76 40 L40 76 L4 40 Z'/%3E%3Cpath d='M40 22 L58 40 L40 58 L22 40 Z'/%3E%3Ccircle cx='40' cy='40' r='5'/%3E%3Cpath d='M0 0 L14 14 M80 0 L66 14 M0 80 L14 66 M80 80 L66 66'/%3E%3C/g%3E%3C/svg%3E");
+    background-size:80px 80px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 18px 56px;
+    gap:22px;
+  }
+
+  /* ---------- rubrik ---------- */
+  header{width:100%;max-width:620px;text-align:center;color:var(--tile)}
+  .eyebrow{
+    font-size:.72rem;letter-spacing:.34em;text-transform:uppercase;
+    font-weight:700;color:var(--saffron);margin:0 0 10px;
+  }
+  h1{
+    font-family:var(--display);font-weight:800;
+    font-size:clamp(2.6rem,11vw,4rem);line-height:.9;
+    margin:0;letter-spacing:-.02em;
+  }
+  h1 em{font-style:normal;color:var(--saffron)}
+  .sub{margin:12px 0 0;font-size:.98rem;color:rgba(251,246,234,.72)}
+
+  /* ---------- kort ---------- */
+  .card{
+    width:100%;max-width:620px;
+    background:var(--tile);
+    border:8px solid var(--cobalt);
+    outline:2px solid var(--saffron);outline-offset:-14px;
+    padding:34px 26px 28px;
+    box-shadow:0 18px 0 rgba(0,0,0,.16);
+  }
+  .card[hidden]{display:none}
+
+  /* ---------- start ---------- */
+  .lead{margin:0 0 22px;font-size:1.05rem;line-height:1.55;text-align:center}
+  fieldset{border:0;margin:0 0 22px;padding:0}
+  legend{
+    font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;
+    font-weight:700;color:var(--cobalt);margin-bottom:10px;padding:0;
+  }
+  .modes{display:grid;gap:8px}
+  .mode{
+    display:flex;align-items:center;gap:12px;cursor:pointer;
+    padding:13px 15px;background:#fff;border:2px solid var(--tile-shade);
+    font-size:1rem;font-weight:500;
+  }
+  .mode:hover{border-color:var(--cobalt)}
+  .mode input{accent-color:var(--cobalt);width:18px;height:18px;margin:0}
+  .mode:has(input:checked){border-color:var(--cobalt);background:#F0F4FD}
+  .mode:has(input:focus-visible){outline:3px solid var(--saffron);outline-offset:2px}
+
+  /* ---------- knappar ---------- */
+  .btn{
+    font-family:var(--body);font-size:1.02rem;font-weight:700;
+    padding:15px 22px;border:0;cursor:pointer;
+    background:var(--cobalt);color:#fff;width:100%;
+    letter-spacing:.01em;
+  }
+  .btn:hover{background:#153E8C}
+  .btn.ghost{background:transparent;color:var(--cobalt);border:2px solid var(--cobalt)}
+  .btn.ghost:hover{background:#E7EDFA}
+  .btn:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
+  .row{display:flex;gap:10px;margin-top:16px}
+  .row .btn{flex:1}
+
+  /* ---------- mosaik ---------- */
+  .mosaic{display:flex;justify-content:center;gap:9px;margin:0 0 26px;flex-wrap:wrap}
+  .chip{
+    width:15px;height:15px;transform:rotate(45deg);
+    background:transparent;border:2px solid #C8BFA8;
+    transition:background .25s ease, border-color .25s ease, transform .25s ease;
+  }
+  .chip.correct{background:var(--verde);border-color:var(--verde)}
+  .chip.wrong{background:var(--saffron);border-color:#C9950A}
+  .chip.current{border-color:var(--cobalt);transform:rotate(45deg) scale(1.45)}
+
+  /* ---------- fråga ---------- */
+  .counter{
+    text-align:center;font-size:.72rem;letter-spacing:.24em;
+    text-transform:uppercase;font-weight:700;color:#8C8270;
+  }
+  .prompt-lang{
+    text-align:center;font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;
+    font-weight:700;color:var(--cobalt);margin:22px 0 6px;
+  }
+  .word{
+    font-family:var(--display);font-weight:600;
+    font-size:clamp(2.1rem,9vw,3.1rem);line-height:1.05;
+    text-align:center;margin:0 0 26px;letter-spacing:-.015em;
+    word-break:break-word;
+  }
+  .anim{animation:rise .34s cubic-bezier(.2,.8,.3,1) both}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  input[type=text]{
+    width:100%;font-family:var(--body);font-size:1.35rem;text-align:center;
+    padding:12px 8px;border:0;border-bottom:3px solid var(--cobalt);
+    background:transparent;color:var(--ink);border-radius:0;
+  }
+  input[type=text]:focus{outline:0;border-bottom-color:var(--saffron)}
+  input[type=text]::placeholder{color:#B5AC97}
+  input[type=text]:disabled{color:var(--ink);opacity:1;border-bottom-style:dotted}
+
+  .feedback{min-height:56px;margin-top:18px;text-align:center;font-size:1.05rem;line-height:1.4}
+  .feedback b{font-family:var(--display);font-weight:600;font-size:1.25rem}
+  .ok{color:var(--verde);font-weight:700}
+  .no{color:var(--rojo);font-weight:700}
+  .hint{font-size:.82rem;color:#8C8270;margin-top:8px}
+
+  /* ---------- resultat ---------- */
+  .score{
+    font-family:var(--display);font-weight:800;text-align:center;
+    font-size:clamp(2.6rem,12vw,3.8rem);line-height:1;margin:0;color:var(--cobalt);
+  }
+  .score-label{text-align:center;margin:8px 0 24px;font-size:1rem;color:#6E6555}
+  .review{list-style:none;margin:0 0 8px;padding:0}
+  .review li{
+    display:flex;justify-content:space-between;gap:14px;align-items:baseline;
+    padding:11px 2px;border-bottom:1px solid var(--tile-shade);font-size:1rem;
+  }
+  .review .es{font-family:var(--display);font-weight:600;font-size:1.12rem}
+  .review .sv{color:#6E6555;text-align:right}
+  .review li.miss{border-left:4px solid var(--saffron);padding-left:10px}
+  .review-head{
+    font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;
+    font-weight:700;color:var(--cobalt);margin:0 0 6px;
+  }
+
+  footer{color:rgba(251,246,234,.5);font-size:.8rem;text-align:center;max-width:620px}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">Glosförhör</p>
+  <h1>Español<em>.</em></h1>
+  <p class="sub">Gustavs glosor · 10 ord</p>
+</header>
+
+<!-- START -->
+<section class="card" id="start">
+  <p class="lead">Skriv den rätta översättningen. Enter rättar och går vidare.</p>
+  <fieldset>
+    <legend>Riktning</legend>
+    <div class="modes">
+      <label class="mode"><input type="radio" name="mode" value="es-sv" checked> Spanska → Svenska</label>
+      <label class="mode"><input type="radio" name="mode" value="sv-es"> Svenska → Spanska</label>
+      <label class="mode"><input type="radio" name="mode" value="mix"> Blandat</label>
+    </div>
+  </fieldset>
+  <button class="btn" id="startBtn">Starta förhöret</button>
+</section>
+
+<!-- FÖRHÖR -->
+<section class="card" id="quiz" hidden>
+  <div class="mosaic" id="mosaic"></div>
+  <p class="counter" id="counter">Ord 1 av 10</p>
+  <p class="prompt-lang" id="promptLang">Spanska</p>
+  <p class="word" id="word">—</p>
+  <input type="text" id="answer" placeholder="Skriv svaret" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
+  <div class="feedback" id="feedback"></div>
+  <div class="row">
+    <button class="btn" id="checkBtn">Rätta</button>
+    <button class="btn ghost" id="revealBtn">Visa svar</button>
+  </div>
+</section>
+
+<!-- RESULTAT -->
+<section class="card" id="done" hidden>
+  <p class="score" id="score">0 / 10</p>
+  <p class="score-label" id="scoreLabel"></p>
+  <p class="review-head">Alla ord</p>
+  <ul class="review" id="review"></ul>
+  <div class="row">
+    <button class="btn" id="againBtn">Kör igen</button>
+    <button class="btn ghost" id="missBtn" hidden>Öva på felen</button>
+  </div>
+</section>
+
+<footer>Glosorna är hämtade från Gustavs glosblad.</footer>
+
+<script>
+/* ---------- Glosorna ---------- */
+const GLOSOR = [
+  { es:"hola",          sv:"hej",              esAlt:[],                sv0:["hejsan"] },
+  { es:"muy bien",      sv:"mycket bra",       esAlt:[],                sv0:[] },
+  { es:"y tú",          sv:"och du",           esAlt:["y usted"],       sv0:[] },
+  { es:"gracias",       sv:"tack",             esAlt:[],                sv0:["tack så mycket"] },
+  { es:"buenos días",   sv:"goddag",           esAlt:[],                sv0:["god dag","god morgon"] },
+  { es:"regular",       sv:"sådär",            esAlt:[],                sv0:["så där","sådär bra"] },
+  { es:"hasta mañana",  sv:"vi ses imorgon",   esAlt:[],                sv0:["vi ses i morgon","på återseende imorgon","vi ses imorron"] },
+  { es:"agua",          sv:"vatten",           esAlt:["el agua"],       sv0:[] },
+  { es:"mal",           sv:"dåligt",           esAlt:[],                sv0:["dålig","illa"] },
+  { es:"mi",            sv:"min",              esAlt:[],                sv0:["mitt","mina"] }
+];
+
+/* ---------- Hjälpfunktioner ---------- */
+const norm = s => s
+  .toLowerCase().trim()
+  .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+  .replace(/[¿?¡!.,;:]/g,"")
+  .replace(/\s+/g," ");
+
+const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; };
+
+/* ---------- Element ---------- */
+const el = id => document.getElementById(id);
+const startCard=el("start"), quizCard=el("quiz"), doneCard=el("done");
+const mosaic=el("mosaic"), counter=el("counter"), promptLang=el("promptLang"),
+      wordEl=el("word"), input=el("answer"), feedback=el("feedback"),
+      checkBtn=el("checkBtn"), revealBtn=el("revealBtn");
+
+/* ---------- Läge ---------- */
+let queue=[], i=0, results=[], answered=false, mode="es-sv";
+
+function directionFor(){
+  if(mode==="mix") return Math.random()<.5 ? "es-sv" : "sv-es";
+  return mode;
+}
+
+function start(list){
+  queue = shuffle(list.slice()).map(g => ({ ...g, dir: directionFor() }));
+  i=0; results=[]; answered=false;
+  startCard.hidden=true; doneCard.hidden=true; quizCard.hidden=false;
+  buildMosaic();
+  render();
+}
+
+function buildMosaic(){
+  mosaic.innerHTML="";
+  queue.forEach(()=>{ const d=document.createElement("div"); d.className="chip"; mosaic.appendChild(d); });
+}
+
+function paintMosaic(){
+  [...mosaic.children].forEach((c,n)=>{
+    c.className = "chip";
+    if(results[n]) c.classList.add(results[n].correct ? "correct" : "wrong");
+    else if(n===i) c.classList.add("current");
+  });
+}
+
+function render(){
+  const g=queue[i];
+  answered=false;
+  counter.textContent = `Ord ${i+1} av ${queue.length}`;
+  promptLang.textContent = g.dir==="es-sv" ? "Spanska" : "Svenska";
+  wordEl.textContent = g.dir==="es-sv" ? g.es : g.sv;
+  wordEl.classList.remove("anim"); void wordEl.offsetWidth; wordEl.classList.add("anim");
+  input.value=""; input.disabled=false;
+  input.placeholder = g.dir==="es-sv" ? "Svara på svenska" : "Svara på spanska";
+  feedback.innerHTML="";
+  checkBtn.textContent="Rätta";
+  revealBtn.hidden=false;
+  paintMosaic();
+  input.focus();
+}
+
+function accepted(g){
+  return g.dir==="es-sv"
+    ? [g.sv, ...g.sv0].map(norm)
+    : [g.es, ...g.esAlt].map(norm);
+}
+const facit = g => g.dir==="es-sv" ? g.sv : g.es;
+
+function check(revealed){
+  const g=queue[i];
+  const given=input.value;
+  const correct = !revealed && given.trim()!=="" && accepted(g).includes(norm(given));
+
+  results[i] = { es:g.es, sv:g.sv, correct, given:given.trim() };
+  answered=true;
+  input.disabled=true;
+  revealBtn.hidden=true;
+  checkBtn.textContent = i===queue.length-1 ? "Se resultat" : "Nästa ord";
+
+  feedback.innerHTML = correct
+    ? `<span class="ok">Rätt!</span><div class="hint">${g.es} — ${g.sv}</div>`
+    : `<span class="no">${revealed ? "Rätt svar" : "Fel"}</span><div><b>${facit(g)}</b></div>`;
+
+  paintMosaic();
+  checkBtn.focus();
+}
+
+function next(){
+  i++;
+  if(i>=queue.length) finish(); else render();
+}
+
+/* ---------- Spara rundan ---------- */
+function saveRound(){
+  const round = {
+    who:"Gustav",
+    mode,
+    items: results.map((r,n)=>({
+      es:r.es, sv:r.sv, dir:queue[n].dir, correct:r.correct, given:r.given
+    }))
+  };
+
+  // Reservkopia på enheten, så inget tappas om nätet strular.
+  try{
+    const local = JSON.parse(localStorage.getItem("glosor:rundor") || "[]");
+    local.unshift({ ...round, id:"local-"+Date.now(), ts:new Date().toISOString(),
+                    total:round.items.length, right:round.items.filter(x=>x.correct).length });
+    localStorage.setItem("glosor:rundor", JSON.stringify(local.slice(0,100)));
+  }catch(e){ /* privat läge e.d. – strunt samma */ }
+
+  fetch("/api/results", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(round)
+  }).catch(()=>{});
+}
+
+function finish(){
+  const right = results.filter(r=>r.correct).length;
+  const total = results.length;
+  saveRound();
+  quizCard.hidden=true; doneCard.hidden=false;
+  el("score").textContent = `${right} / ${total}`;
+  el("scoreLabel").textContent =
+    right===total ? "Alla rätt. Snyggt jobbat!" :
+    right>=total*0.7 ? "Bra jobbat — några kvar att nöta in." :
+    "Kör en runda till, det sitter snart.";
+
+  const ul=el("review"); ul.innerHTML="";
+  results.forEach(r=>{
+    const li=document.createElement("li");
+    if(!r.correct) li.classList.add("miss");
+    li.innerHTML = `<span class="es">${r.es}</span><span class="sv">${r.sv}</span>`;
+    ul.appendChild(li);
+  });
+
+  const misses = results.filter(r=>!r.correct);
+  el("missBtn").hidden = misses.length===0;
+  el("missBtn").onclick = () =>
+    start(GLOSOR.filter(g => misses.some(m => m.es===g.es)));
+}
+
+/* ---------- Händelser ---------- */
+el("startBtn").onclick = () => {
+  mode = document.querySelector('input[name=mode]:checked').value;
+  start(GLOSOR);
+};
+checkBtn.onclick = () => answered ? next() : check(false);
+revealBtn.onclick = () => check(true);
+el("againBtn").onclick = () => { doneCard.hidden=true; startCard.hidden=false; };
+
+document.addEventListener("keydown", e => {
+  if(e.key!=="Enter" || quizCard.hidden) return;
+  e.preventDefault();
+  answered ? next() : check(false);
+});
+</script>
+</body>
+</html>

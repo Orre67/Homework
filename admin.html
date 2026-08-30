@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Adminvy · Glosförhör</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#10305F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Familjen+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cobalt:#1B4BA8; --cobalt-deep:#10305F; --ink:#0B1B33;
+    --tile:#FBF6EA; --tile-shade:#EFE6D2; --saffron:#F2B705;
+    --verde:#0E8C7F; --rojo:#C93B2B; --muted:#8C8270;
+    --display:"Bricolage Grotesque",Georgia,serif;
+    --body:"Familjen Grotesk",system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{
+    min-height:100svh; font-family:var(--body); color:var(--ink);
+    background-color:var(--cobalt-deep);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.09' stroke-width='1.6'%3E%3Cpath d='M40 4 L76 40 L40 76 L4 40 Z'/%3E%3Cpath d='M40 22 L58 40 L40 58 L22 40 Z'/%3E%3Ccircle cx='40' cy='40' r='5'/%3E%3Cpath d='M0 0 L14 14 M80 0 L66 14 M0 80 L14 66 M80 80 L66 66'/%3E%3C/g%3E%3C/svg%3E");
+    background-size:80px 80px;
+    display:flex; flex-direction:column; align-items:center;
+    padding:28px 18px 56px; gap:18px;
+  }
+  header{width:100%;max-width:720px;text-align:center;color:var(--tile)}
+  .eyebrow{font-size:.72rem;letter-spacing:.34em;text-transform:uppercase;font-weight:700;color:var(--saffron);margin:0 0 10px}
+  h1{font-family:var(--display);font-weight:800;font-size:clamp(2.3rem,9vw,3.4rem);line-height:.92;margin:0;letter-spacing:-.02em}
+  .sub{margin:11px 0 0;font-size:.95rem;color:rgba(251,246,234,.72)}
+
+  .card{
+    width:100%;max-width:720px;background:var(--tile);
+    border:8px solid var(--cobalt); outline:2px solid var(--saffron); outline-offset:-14px;
+    padding:30px 24px 26px; box-shadow:0 18px 0 rgba(0,0,0,.16);
+  }
+  .card[hidden]{display:none}
+  h2{
+    font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;
+    font-weight:700;color:var(--cobalt);margin:0 0 14px;
+  }
+  .lead{margin:0 0 20px;font-size:1.02rem;line-height:1.55;text-align:center}
+
+  input[type=password],input[type=text]{
+    width:100%;font-family:var(--body);font-size:1.3rem;text-align:center;
+    padding:12px 8px;border:0;border-bottom:3px solid var(--cobalt);
+    background:transparent;color:var(--ink);border-radius:0;
+  }
+  input:focus{outline:0;border-bottom-color:var(--saffron)}
+  .btn{
+    font-family:var(--body);font-size:1rem;font-weight:700;padding:14px 20px;
+    border:0;cursor:pointer;background:var(--cobalt);color:#fff;width:100%;
+  }
+  .btn:hover{background:#153E8C}
+  .btn.ghost{background:transparent;color:var(--cobalt);border:2px solid var(--cobalt)}
+  .btn.ghost:hover{background:#E7EDFA}
+  .btn.danger{background:transparent;color:var(--rojo);border:2px solid var(--rojo)}
+  .btn.danger:hover{background:#FBEAE7}
+  .btn:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
+  .row{display:flex;gap:10px;margin-top:16px}
+  .row .btn{flex:1}
+  .msg{margin-top:14px;text-align:center;font-size:.95rem;color:var(--rojo);font-weight:500;min-height:22px}
+
+  /* nyckeltal */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--tile-shade);margin-bottom:6px}
+  .stat{background:var(--tile);padding:16px 10px;text-align:center}
+  .stat .n{font-family:var(--display);font-weight:800;font-size:clamp(1.7rem,7vw,2.4rem);line-height:1;color:var(--cobalt)}
+  .stat .l{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:8px;font-weight:700}
+
+  /* trend */
+  .trend{display:flex;align-items:flex-end;gap:5px;height:86px;margin:6px 0 4px;padding-top:6px}
+  .bar{flex:1;min-width:8px;background:var(--cobalt);position:relative;transition:height .3s ease}
+  .bar.low{background:var(--saffron)}
+  .bar.perfect{background:var(--verde)}
+  .trend-axis{display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);border-top:1px solid var(--tile-shade);padding-top:6px}
+
+  /* svåra ord */
+  .words{list-style:none;margin:0;padding:0}
+  .words li{padding:12px 0;border-bottom:1px solid var(--tile-shade)}
+  .wline{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+  .es{font-family:var(--display);font-weight:600;font-size:1.15rem}
+  .sv{color:var(--muted);font-size:.92rem}
+  .tally{font-size:.82rem;font-weight:700;white-space:nowrap;color:var(--muted)}
+  .meter{height:7px;background:var(--tile-shade);margin-top:9px}
+  .meter span{display:block;height:100%;background:var(--rojo)}
+  .meter.clean span{background:var(--verde)}
+  .given{font-size:.84rem;color:var(--muted);margin-top:6px;font-style:italic}
+
+  /* rundor */
+  .rounds{list-style:none;margin:0;padding:0}
+  .rounds li{border-bottom:1px solid var(--tile-shade);padding:2px 0}
+  details summary{
+    cursor:pointer;padding:13px 2px;display:flex;justify-content:space-between;
+    align-items:baseline;gap:12px;list-style:none;
+  }
+  details summary::-webkit-details-marker{display:none}
+  summary:focus-visible{outline:3px solid var(--saffron)}
+  .when{font-size:.95rem}
+  .badge{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-left:8px}
+  .res{font-family:var(--display);font-weight:600;font-size:1.1rem;white-space:nowrap}
+  .res.good{color:var(--verde)} .res.mid{color:var(--cobalt)} .res.low{color:var(--rojo)}
+  .detail{padding:4px 2px 16px;font-size:.94rem;line-height:1.7}
+  .detail .miss{color:var(--rojo)}
+  .empty{text-align:center;color:var(--muted);padding:22px 0;line-height:1.6}
+  .source{
+    text-align:center;font-size:.78rem;color:var(--muted);
+    border:1px dashed var(--tile-shade);padding:9px;margin-bottom:20px;
+  }
+  footer{color:rgba(251,246,234,.5);font-size:.8rem;text-align:center;max-width:720px}
+  footer a{color:rgba(251,246,234,.8)}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">Adminvy</p>
+  <h1>Hur går det?</h1>
+  <p class="sub">Gustavs spanskaglosor</p>
+</header>
+
+<!-- LÅS -->
+<section class="card" id="gate">
+  <p class="lead">Skriv din adminkod för att se resultaten.</p>
+  <input type="password" id="pin" placeholder="Kod" autocomplete="current-password" enterkeyhint="go">
+  <div class="row"><button class="btn" id="unlock">Lås upp</button></div>
+  <p class="msg" id="gateMsg"></p>
+</section>
+
+<!-- ÖVERSIKT -->
+<section class="card" id="overview" hidden>
+  <p class="source" id="source"></p>
+  <div class="stats">
+    <div class="stat"><div class="n" id="sRounds">0</div><div class="l">Rundor</div></div>
+    <div class="stat"><div class="n" id="sAvg">0%</div><div class="l">Snitt</div></div>
+    <div class="stat"><div class="n" id="sLast">–</div><div class="l">Senast</div></div>
+  </div>
+  <h2 style="margin-top:26px">Utveckling</h2>
+  <div class="trend" id="trend"></div>
+  <div class="trend-axis"><span id="trendFrom">–</span><span id="trendTo">–</span></div>
+</section>
+
+<!-- SVÅRA ORD -->
+<section class="card" id="hardCard" hidden>
+  <h2>Ord han fastnar på</h2>
+  <ul class="words" id="hard"></ul>
+</section>
+
+<!-- RUNDOR -->
+<section class="card" id="roundsCard" hidden>
+  <h2>Varje runda</h2>
+  <ul class="rounds" id="rounds"></ul>
+  <div class="row">
+    <button class="btn ghost" id="reload">Uppdatera</button>
+    <button class="btn danger" id="clear">Rensa historik</button>
+  </div>
+  <p class="msg" id="adminMsg"></p>
+</section>
+
+<footer>Glosförhöret finns på <a href="/">startsidan</a>.</footer>
+
+<script>
+const el = id => document.getElementById(id);
+let PIN = "", ROUNDS = [], SOURCE = "";
+
+/* ---------- Hämta data ---------- */
+function localRounds(){
+  try { return JSON.parse(localStorage.getItem("glosor:rundor") || "[]"); }
+  catch { return []; }
+}
+
+async function load(pin){
+  try{
+    const r = await fetch(`/api/results?pin=${encodeURIComponent(pin)}`);
+    if(r.status === 401) return { error:"Fel kod." };
+    const data = await r.json().catch(()=>({}));
+    if(r.ok) return { rounds:data.rounds || [], source:"molnet" };
+
+    // Ingen databas eller ingen PIN uppsatt – fall tillbaka på enheten.
+    const local = localRounds();
+    return { rounds:local, source:"enheten", note:data.message || "" };
+  }catch{
+    return { rounds:localRounds(), source:"enheten", note:"Kunde inte nå servern." };
+  }
+}
+
+/* ---------- Rendering ---------- */
+const pct = (a,b) => b ? Math.round(a/b*100) : 0;
+
+function render(){
+  el("overview").hidden = false;
+  el("hardCard").hidden = false;
+  el("roundsCard").hidden = false;
+
+  el("source").textContent = SOURCE === "molnet"
+    ? "Sparat i molnet – syns från alla enheter."
+    : "Visar bara rundor från den här enheten. Koppla en databas för att se allt.";
+
+  if(!ROUNDS.length){
+    el("sRounds").textContent = "0";
+    el("sAvg").textContent = "–";
+    el("sLast").textContent = "–";
+    el("trend").innerHTML = "";
+    el("hard").innerHTML = '<li class="empty">Inga rundor gjorda än.</li>';
+    el("rounds").innerHTML = '<li class="empty">Historiken fylls på när Gustav kört förhöret.</li>';
+    return;
+  }
+
+  const sorted = [...ROUNDS].sort((a,b) => new Date(b.ts) - new Date(a.ts)); // nyast först
+
+  /* nyckeltal */
+  const totRight = sorted.reduce((s,r)=>s+r.right,0);
+  const totWords = sorted.reduce((s,r)=>s+r.total,0);
+  el("sRounds").textContent = sorted.length;
+  el("sAvg").textContent = pct(totRight,totWords) + "%";
+  el("sLast").textContent = `${sorted[0].right}/${sorted[0].total}`;
+
+  /* trend – äldst till nyast, senaste 14 */
+  const trend = sorted.slice(0,14).reverse();
+  el("trend").innerHTML = trend.map(r=>{
+    const p = pct(r.right,r.total);
+    const cls = p===100 ? "perfect" : p<60 ? "low" : "";
+    return `<div class="bar ${cls}" style="height:${Math.max(p,6)}%"
+             title="${fmt(r.ts)} — ${r.right}/${r.total}"></div>`;
+  }).join("");
+  el("trendFrom").textContent = fmt(trend[0].ts);
+  el("trendTo").textContent = trend.length>1 ? fmt(trend[trend.length-1].ts) : "";
+
+  /* svåra ord */
+  const stats = new Map();
+  sorted.forEach(r => (r.items||[]).forEach(it=>{
+    const k = it.es;
+    if(!stats.has(k)) stats.set(k, { es:it.es, sv:it.sv, n:0, miss:0, wrong:[] });
+    const s = stats.get(k);
+    s.n++;
+    if(!it.correct){ s.miss++; if(it.given) s.wrong.push(it.given); }
+  }));
+
+  const words = [...stats.values()].sort((a,b)=>
+    (b.miss/b.n) - (a.miss/a.n) || b.miss - a.miss || a.es.localeCompare(b.es,"es"));
+
+  el("hard").innerHTML = words.map(w=>{
+    const rate = pct(w.miss,w.n);
+    const guesses = [...new Set(w.wrong)].slice(0,3).join(", ");
+    return `<li>
+      <div class="wline">
+        <span><span class="es">${esc(w.es)}</span> <span class="sv">${esc(w.sv)}</span></span>
+        <span class="tally">${w.miss} fel / ${w.n}</span>
+      </div>
+      <div class="meter ${w.miss?"":"clean"}"><span style="width:${w.miss?rate:100}%"></span></div>
+      ${guesses ? `<div class="given">Svarade: ${esc(guesses)}</div>` : ""}
+    </li>`;
+  }).join("");
+
+  /* rundor */
+  el("rounds").innerHTML = sorted.map(r=>{
+    const p = pct(r.right,r.total);
+    const cls = p>=90 ? "good" : p>=60 ? "mid" : "low";
+    const misses = (r.items||[]).filter(i=>!i.correct);
+    const body = misses.length
+      ? misses.map(i=>`<div class="miss">${esc(i.es)} — ${esc(i.sv)}${
+          i.given ? ` · svarade "${esc(i.given)}"` : " · inget svar"}</div>`).join("")
+      : "<div>Alla rätt.</div>";
+    return `<li><details>
+      <summary>
+        <span class="when">${fmt(r.ts, true)}<span class="badge">${dirName(r.mode)}</span></span>
+        <span class="res ${cls}">${r.right}/${r.total}</span>
+      </summary>
+      <div class="detail">${body}</div>
+    </details></li>`;
+  }).join("");
+}
+
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+const fmt = (ts, withTime) => new Date(ts).toLocaleString("sv-SE",
+  withTime ? {dateStyle:"short", timeStyle:"short"} : {month:"numeric", day:"numeric"});
+const dirName = m => m==="sv-es" ? "Sv → Es" : m==="mix" ? "Blandat" : "Es → Sv";
+
+/* ---------- Händelser ---------- */
+async function unlock(){
+  const pin = el("pin").value.trim();
+  if(!pin) return;
+  el("gateMsg").textContent = "Hämtar…";
+  const data = await load(pin);
+  if(data.error){ el("gateMsg").textContent = data.error; return; }
+  PIN = pin; ROUNDS = data.rounds; SOURCE = data.source;
+  sessionStorage.setItem("glosor:pin", pin);
+  el("gate").hidden = true;
+  el("gateMsg").textContent = "";
+  render();
+}
+
+el("unlock").onclick = unlock;
+el("pin").addEventListener("keydown", e => { if(e.key==="Enter") unlock(); });
+
+el("reload").onclick = async () => {
+  el("adminMsg").textContent = "Hämtar…";
+  const data = await load(PIN);
+  ROUNDS = data.rounds || []; SOURCE = data.source;
+  render();
+  el("adminMsg").textContent = "";
+};
+
+el("clear").onclick = async () => {
+  if(!confirm("Radera all resultathistorik? Det går inte att ångra.")) return;
+  try{
+    await fetch(`/api/results?pin=${encodeURIComponent(PIN)}`, { method:"DELETE" });
+  }catch{}
+  try{ localStorage.removeItem("glosor:rundor"); }catch{}
+  ROUNDS = []; render();
+  el("adminMsg").textContent = "Historiken är rensad.";
+};
+
+/* Kom ihåg koden under sessionen */
+const saved = sessionStorage.getItem("glosor:pin");
+if(saved){ el("pin").value = saved; unlock(); }
+</script>
+</body>
+</html>
