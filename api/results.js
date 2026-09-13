@@ -1,4 +1,5 @@
-// Sparar och hämtar resultat från glosförhöret.
+// Sparar och hämtar resultat från läxappen: förhörsrundor (glosor, frågor)
+// och avbockade uppgifter. Varje post är en "runda" med en lista items.
 // Lagring: Neon Postgres via SQL-över-HTTP (inga npm-paket behövs).
 //
 // Miljövariabler i Vercel:
@@ -59,15 +60,19 @@ module.exports = async (req, res) => {
         id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
         ts: new Date().toISOString(),
         who: str(body.who || "Gustav", 40),
-        mode: str(body.mode || "es-sv", 10),
+        laxa: str(body.laxa, 60),          // läxans id från laxor.js
+        titel: str(body.titel, 80),
+        amne: str(body.amne, 40),
+        typ: str(body.typ || "glosor", 12), // glosor | fragor | uppgift
+        mode: str(body.mode, 10),           // fram | bak | mix | lyssna
         total: items.length,
         right: items.filter(x => x.correct === true).length,
         items: items.map(x => ({
-          es: str(x.es, 60),
-          sv: str(x.sv, 60),
+          q: str(x.q ?? x.es, 80),          // det som frågades
+          a: str(x.a ?? x.sv, 80),          // rätt svar
           dir: str(x.dir, 10),
           correct: x.correct === true,
-          given: str(x.given, 60)
+          given: str(x.given, 80)
         }))
       };
 
