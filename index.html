@@ -155,6 +155,9 @@
     background:transparent;border:0;padding:12px;cursor:pointer;text-decoration:underline;
   }
   .link.dark{color:var(--muted)}
+  .link.inline{display:inline;padding:0;font-size:inherit;vertical-align:baseline}
+  .link[hidden]{display:none}
+  .whoLine{text-align:center;margin-top:12px}
 
   input[type=text]{
     width:100%;font-family:var(--body);font-size:1.3rem;text-align:center;
@@ -295,7 +298,7 @@
   <header class="hero">
     <p class="eyebrow">Läxor</p>
     <h1 id="greeting">Hej!</h1>
-    <p class="sub" id="homeSub"></p>
+    <p class="sub"><span id="homeSub"></span> <button class="link inline" id="changeName" type="button" hidden>Byt namn</button></p>
   </header>
 
   <section class="card" id="nameCard" hidden>
@@ -309,7 +312,6 @@
     <ul class="laxor" id="aktuella"></ul>
     <h2 class="section-title" id="tidigareHead">Tidigare</h2>
     <ul class="laxor" id="tidigare"></ul>
-    <footer><button class="link" id="changeName">Byt namn</button></footer>
   </div>
 </section>
 
@@ -335,6 +337,7 @@
         <label class="mode" id="modeLyssna"><input type="radio" name="mode" value="lyssna"> Lyssna → Svenska (ordet läses upp)</label>
       </div>
       <button class="btn" id="startBtn">Starta förhöret</button>
+      <p class="hint whoLine">Sparas som <b class="whoName"></b> · <button class="link dark inline changeName" type="button">byt namn</button></p>
     </section>
     <section class="card">
       <div class="cardhead">
@@ -357,6 +360,7 @@
         <button class="link dark" id="undoBtn">Ångra</button>
       </div>
       <button class="btn" id="doneBtn">Markera som klar</button>
+      <p class="hint whoLine">Sparas som <b class="whoName"></b> · <button class="link dark inline changeName" type="button">byt namn</button></p>
     </section>
   </div>
 </section>
@@ -507,6 +511,7 @@ function renderHome(){
   el("nameCard").hidden = !!who;
   el("homeLists").hidden = !who;
   el("greeting").textContent = who ? `Hej ${who}!` : "Hej!";
+  el("changeName").hidden = !who;
 
   const akt = LAXOR.filter(l => !isPast(l)).sort(byTill);
   const tid = LAXOR.filter(isPast).sort((x,y) => -byTill(x,y));
@@ -544,6 +549,7 @@ function renderLaxa(l){
   el("laxaSub").textContent = [typLabel(l), l.till ? (isPast(l) ? "Var till " : "Till ") + dueLabel(l) : ""].filter(Boolean).join(" · ");
   el("quizIntro").hidden = !isQuiz(l);
   el("taskIntro").hidden = isQuiz(l);
+  document.querySelectorAll(".whoName").forEach(e => e.textContent = who);
   if(isQuiz(l)) renderQuizIntro(l); else renderTask(l);
   show("laxa");
 }
@@ -807,7 +813,15 @@ el("saveName").onclick = () => {
   setName(n); route();
 };
 el("who").addEventListener("keydown", e => { if(e.key === "Enter") el("saveName").click(); });
-el("changeName").onclick = () => { setName(""); el("who").value = ""; route(); };
+/* Byt namn: namnrutan visas igen, förifylld med det gamla namnet. Är man inne
+   på en läxa kommer man tillbaka dit när det nya namnet sparats. */
+function changeName(){
+  const prev = getName();
+  setName(""); el("who").value = prev; route();
+  setTimeout(() => { el("who").focus(); el("who").select(); }, 50);
+}
+el("changeName").onclick = changeName;
+document.querySelectorAll(".changeName").forEach(b => b.onclick = changeName);
 
 el("startBtn").onclick = () => {
   mode = L.typ === "glosor" ? document.querySelector("input[name=mode]:checked").value : "fram";
