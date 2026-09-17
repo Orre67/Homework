@@ -302,7 +302,7 @@ function renderDetail(){
   el("overview").hidden = !quiz;
   el("hardCard").hidden = !quiz;
   el("roundsHead").textContent = quiz ? "Varje runda" : "Avbockat";
-  el("hardHead").textContent = l.typ === "fragor" ? "Frågor han fastnar på" : "Ord han fastnar på";
+  el("hardHead").textContent = l.typ === "glosor" ? "Ord han fastnar på" : "Frågor han fastnar på";
 
   if(!rs.length){
     el("hard").innerHTML = '<li class="empty">Inga rundor gjorda än.</li>';

@@ -13,7 +13,7 @@ manifest.webmanifest + icon-*.png   gör att sidan kan läggas på hemskärmen s
 ## Lägga in veckans läxor
 
 Öppna `laxor.js`. Varje läxa är ett objekt i listan `LAXOR` med `id`, `amne`,
-`titel`, `till` (sista dag) och `typ`. Det finns tre typer:
+`titel`, `till` (sista dag) och `typ`. Det finns fyra typer:
 
 **Glosor** – förhörs åt båda hållen, kan läsas upp.
 
@@ -45,6 +45,39 @@ gångertabeller, årtal, begrepp.
   ]
 }
 ```
+
+**Plugga** – text att läsa eller lyssna på, och ett prov. Bra inför SO/NO-prov.
+
+```js
+{
+  id: "so-v38-demokrati", amne: "SO", titel: "Demokrati och politik", till: "2026-09-25",
+  typ: "plugga",
+  stycken: [
+    {
+      rubrik: "Kommuner",
+      text: [
+        "Det finns 290 kommuner i Sverige. Några exempel är:",
+        ["Skolor", "Bibliotek"],                       // lista = punktlista
+        "Detta kallas *självstyre*",                   // *fet*, _kursiv_, ==gul markering==
+        { bild:"riksdag" }                             // färdig bild: partier, riksdag, valsedlar
+      ],                                               // eller { bild:{ src:"karta.png", alt:"..." } }
+      ruta: "En faktaruta."                            // valfri
+    }
+  ],
+  fragor: [
+    { q:"Hur många kommuner finns det?", a:"290", fel:["21", "349", "100"] },
+    { q:"Vilket parti har den här symbolen?", bild:"centerpartiet", a:"Centerpartiet", fel:["..."] }
+  ]
+}
+```
+
+Varje stycke blir ett eget kort med en högtalare som läser upp hela stycket (tryck
+igen för att stoppa). Frågor med `fel` blir flerval där alternativen blandas varje
+gång; utan `fel` skriver man svaret själv. `bild` på en fråga visar en partisymbol
+(`centerpartiet`, `socialdemokraterna`, `liberalerna`, `sverigedemokraterna`,
+`kristdemokraterna`, `moderaterna`, `miljopartiet`, `vansterpartiet`).
+Har provet fler än 10 frågor finns även knappen "Öva på 10 slumpade frågor" –
+de rundorna räknas som övning, inte som ett helt prov.
 
 **Uppgift** – något som ska göras och bockas av. `steg` och `lank` är valfria.
 
