@@ -79,6 +79,19 @@ gång; utan `fel` skriver man svaret själv. `bild` på en fråga visar en parti
 Har provet fler än 10 frågor finns även knappen "Öva på 10 slumpade frågor" –
 de rundorna räknas som övning, inte som ett helt prov.
 
+Partisymbolerna är partiernas egna symboler, sparade som `partier/<namn>.svg` och
+beskurna till bara symbolen (utan partinamn):
+
+| Fil | Källa |
+|---|---|
+| centerpartiet, liberalerna, moderaterna, vansterpartiet | Wikimedia Commons (`C_v1.svg`, `L_v1.svg`, `M_v1.svg`, `Vänsterpartiet_logo.svg`). Moderaternas blå är justerad till #1D3A90 efter loggan på moderaterna.se |
+| kristdemokraterna | kristdemokraterna.se (`KD-logo-blue.svg`, samma fil som på Commons) |
+| miljopartiet | mp.se (`logo-mobile.svg`) |
+| socialdemokraterna | socialdemokraterna.se (rosen ur `S logga - Liggande Negativ.svg`) |
+| sverigedemokraterna | blåsippan ur `Sweden_Democrats_logo_and_initials.svg` på engelska Wikipedia |
+
+Byter ett parti symbol räcker det att ersätta filen.
+
 **Uppgift** – något som ska göras och bockas av. `steg` och `lank` är valfria.
 
 ```js
