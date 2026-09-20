@@ -287,6 +287,19 @@
   .say.small svg{width:17px;height:17px}
   .say-row{text-align:center;margin:-10px 0 18px}
   .say-row[hidden]{display:none}
+
+  /* ---------- specialtecken ovanför svarsrutan ---------- */
+  .keys{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:0 0 4px}
+  .keys[hidden]{display:none}
+  .key{
+    font-family:var(--body);font-size:1.15rem;font-weight:700;line-height:1;
+    min-width:42px;min-height:42px;padding:8px 6px;cursor:pointer;
+    background:#fff;border:2px solid var(--tile-shade);color:var(--cobalt);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .key:hover{border-color:var(--cobalt);background:#F0F4FD}
+  .key:active{background:#E7EDFA;transform:translateY(1px)}
+  .feedback .stav{color:var(--terra);font-weight:700}
   .say.playing{background:var(--cobalt);color:#fff}
 
   /* ---------- plugga: textstycken ---------- */
@@ -373,6 +386,7 @@
     <ul class="laxor" id="aktuella"></ul>
     <h2 class="section-title" id="tidigareHead">Tidigare</h2>
     <ul class="laxor" id="tidigare"></ul>
+    <footer><a class="link" href="admin">Admin</a></footer>
   </div>
 </section>
 
@@ -458,6 +472,7 @@
     <p class="word" id="word">—</p>
     <div class="say-row" id="sayRow" hidden><button class="say" id="sayBtn" type="button" aria-label="Läs upp"></button></div>
     <div class="choices" id="choices" hidden></div>
+    <div class="keys" id="keys" hidden></div>
     <input type="text" id="answer" placeholder="Skriv svaret" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
     <div class="feedback" id="feedback"></div>
     <div class="row" id="quizRow">
@@ -549,13 +564,13 @@ function pairsOf(l){
   if(l.typ === "glosor"){
     const k = l.sprak || "es";
     return l.glosor.map(g => ({
-      a:g[k], b:g.sv, aAlt:g[k+"Alt"] || [], bAlt:g.svAlt || g.sv0 || [], exakt:!!g.exakt
+      a:g[k], b:g.sv, aAlt:g[k+"Alt"] || [], bAlt:g.svAlt || g.sv0 || [], exakt:!!(g.exakt || l.exakt)
     }));
   }
   if(l.typ === "fragor" || l.typ === "plugga"){
     /* Med fel-lista blir frågan flerval: val = rätt svar + felen (blandas vid visning). */
     return (l.fragor || []).map(f => ({
-      a:f.q, b:f.a, aAlt:[], bAlt:f.alt || [], exakt:!!f.exakt,
+      a:f.q, b:f.a, aAlt:[], bAlt:f.alt || [], exakt:!!(f.exakt || l.exakt),
       val:f.fel && f.fel.length ? [f.a, ...f.fel] : null, bild:f.bild || ""
     }));
   }
@@ -745,7 +760,9 @@ function renderQuizIntro(l){
   el("modeFram").textContent = `${A} → ${B}`;
   el("modeBak").textContent  = `${B} → ${A}`;
   el("modeLyssna").hidden = !tts;
-  const saved = store.get("laxor:mode", "fram");
+  /* Varje läxa minns sitt eget läge. Första gången gäller läxans "riktning"
+     (t.ex. "bak" = Svenska → Spanska), annars det man senast körde. */
+  const saved = store.get("laxor:mode:" + l.id, l.riktning || store.get("laxor:mode", "fram"));
   const radio = document.querySelector(`input[name=mode][value="${saved}"]`);
   if(radio && !radio.closest(".mode").hidden) radio.checked = true;
   else document.querySelector('input[name=mode][value="fram"]').checked = true;
@@ -861,6 +878,31 @@ let queue = [], i = 0, results = [], answered = false, mode = "fram";
 const wordEl = el("word"), input = el("answer"), feedback = el("feedback"),
       checkBtn = el("checkBtn"), revealBtn = el("revealBtn"), mosaic = el("mosaic");
 
+/* Specialtecken: knappar som skriver tecknet där markören står, så att man
+   slipper byta till ett spanskt tangentbord på mobilen. */
+const SPECIALTECKEN = {
+  es:["á","é","í","ó","ú","ñ","ü","¿","¡"],
+  fr:["é","è","ê","à","ç","ù","î","ô"],
+  de:["ä","ö","ü","ß"],
+  it:["à","è","é","ì","ò","ù"]
+};
+function renderKeys(visa){
+  const tecken = visa ? SPECIALTECKEN[L.sprak] || [] : [];
+  el("keys").hidden = !tecken.length;
+  el("keys").innerHTML = tecken.map(c =>
+    `<button class="key" type="button" tabindex="-1" data-key="${c}" aria-label="Skriv ${c}">${c}</button>`).join("");
+}
+el("keys").addEventListener("mousedown", e => e.preventDefault());   // tangentbordet ska stanna framme
+el("keys").addEventListener("click", e => {
+  const b = e.target.closest("[data-key]");
+  if(!b || answered) return;
+  const a = input.selectionStart ?? input.value.length, z = input.selectionEnd ?? a;
+  input.value = input.value.slice(0, a) + b.dataset.key + input.value.slice(z);
+  const pos = a + b.dataset.key.length;
+  input.focus();
+  try{ input.setSelectionRange(pos, pos); }catch{}
+});
+
 function directionFor(){
   if(mode === "lyssna") return "fram";
   if(mode === "mix") return Math.random() < .5 ? "fram" : "bak";
@@ -918,6 +960,7 @@ function render(){
   }
 
   el("sayRow").hidden = !(TTS && (L.typ === "glosor" ? p.dir === "fram" : L.typ === "plugga"));
+  renderKeys(L.typ === "glosor" && p.dir === "bak" && !p.val);   // svaret skrivs på språket
   paintMosaic();
   if(p.val) input.blur(); else input.focus();
   if(lyssna) speak(p.a);
@@ -945,6 +988,7 @@ function check(revealed, picked){
   if(mode === "lyssna") wordEl.textContent = p.a;
   answered = true;
   input.classList.add("locked");
+  el("keys").hidden = true;
   revealBtn.hidden = true;
   checkBtn.textContent = i === queue.length - 1 ? "Se resultat" : "Nästa";
 
@@ -960,9 +1004,14 @@ function check(revealed, picked){
     return;
   }
 
+  /* Rätt ord men fel accent (dieciseis / dieciséis). Utan exakt godkänns det med
+     en påminnelse om stavningen, med exakt blir det fel – men "Nästan" i stället. */
+  const naraNog = given !== "" && !revealed && norm(given) === norm(facit) && clean(given) !== clean(facit);
   feedback.innerHTML = correct
-    ? `<span class="ok">Rätt!</span><div class="hint">${esc(p.a)} — ${esc(p.b)}</div>`
-    : `<span class="no">${revealed ? "Rätt svar" : "Fel"}</span><div><b>${esc(facit)}</b></div>`;
+    ? `<span class="ok">Rätt!</span><div class="hint">${esc(p.a)} — ${esc(p.b)}</div>${
+        naraNog ? `<div class="hint stav">Stavas <b>${esc(facit)}</b></div>` : ""}`
+    : `<span class="no">${revealed ? "Rätt svar" : naraNog ? "Nästan!" : "Fel"}</span><div><b>${esc(facit)}</b></div>${
+        naraNog ? `<div class="hint stav">Bara stavningen skiljer</div>` : ""}`;
   if(TTS && L.typ === "glosor" && p.dir === "bak")
     feedback.innerHTML += `<div class="hint">${sayHtml(p.a)} Hör uttalet</div>`;
   paintMosaic();
@@ -1044,6 +1093,7 @@ document.querySelectorAll(".changeName").forEach(b => b.onclick = changeName);
 el("startBtn").onclick = () => {
   mode = L.typ === "glosor" ? document.querySelector("input[name=mode]:checked").value : "fram";
   store.set("laxor:mode", mode);
+  store.set("laxor:mode:" + L.id, mode);
   startQuiz(PAIRS);
 };
 el("provBtn").onclick = el("provBtn2").onclick = () => { mode = "fram"; startQuiz(PAIRS); };

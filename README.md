@@ -20,7 +20,7 @@ manifest.webmanifest + icon-*.png   gör att sidan kan läggas på hemskärmen s
 ```js
 {
   id: "spanska-v38", amne: "Spanska", titel: "Varifrån är du?", till: "2026-09-18",
-  typ: "glosor", sprak: "es",
+  typ: "glosor", sprak: "es", riktning: "bak",     // valfritt: börja på Svenska → Spanska
   glosor: [
     { es:"el mar", sv:"havet", svAlt:["hav"] },
     { es:"tú",     sv:"du",    exakt:true }        // accenten måste vara rätt
@@ -31,7 +31,16 @@ manifest.webmanifest + icon-*.png   gör att sidan kan läggas på hemskärmen s
 `sprak` är språkkoden (`es`, `en`, `de`, `fr`) och styr både uppläsningen och vilket
 fält som är det främmande språket – engelska glosor skrivs alltså `{ en:"dog", sv:"hund" }`.
 `esAlt`/`svAlt` är extra svar som godkänns. Stora bokstäver, accenter och ¿?¡! spelar
-ingen roll vid rättningen, utom om `exakt:true`.
+ingen roll vid rättningen, utom om `exakt:true` – då måste accenterna sitta rätt.
+`exakt:true` kan sättas på ett enskilt ord eller på hela läxan (bredvid `typ`).
+Utan `exakt` godkänns ett svar som bara saknar accent, men rätt stavning visas
+under "Rätt!"; med `exakt` blir det fel, men svaret märks som "Nästan!".
+
+`riktning` är läget som är förvalt första gången: `"fram"` (språket → svenska),
+`"bak"` (svenska → språket), `"mix"` eller `"lyssna"`. Sedan minns varje läxa
+vilket läge som kördes senast. När svaret ska skrivas på språket visas en rad med
+specialtecken ovanför svarsrutan (á é í ó ú ñ ü ¿ ¡ för spanska), så man slipper
+byta tangentbord på mobilen.
 
 **Frågor** – fråga och svar, bara åt ett håll. Funkar till det mesta: huvudstäder,
 gångertabeller, årtal, begrepp.
@@ -130,7 +139,7 @@ För att kunna se resultaten från din egen telefon:
    `ADMIN_PIN` = koden du vill använda till adminsidan.
 4. Deploya om, så börjar rundorna sparas i molnet.
 
-Adminsidan ligger på `dinsajt.vercel.app/admin` (`vercel.json` med `cleanUrls` gör att `.html` inte behövs i adressen). Den är inte länkad från appen.
+Adminsidan nås via den lilla Admin-länken längst ner på startsidan, eller direkt på `dinsajt.vercel.app/admin` (`vercel.json` med `cleanUrls` gör att `.html` inte behövs i adressen).
 
 ## Adminvyn visar
 

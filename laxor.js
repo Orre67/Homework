@@ -47,6 +47,40 @@ const LAXOR = [
     ]
   },
 
+  {
+    id: "spanska-v39",
+    amne: "Spanska",
+    titel: "Siffrorna 0–20",
+    till: "2026-09-25",
+    typ: "glosor",
+    sprak: "es",
+    riktning: "bak",          /* börjar på Svenska → Spanska */
+    exakt: true,              /* accenterna måste sitta rätt: dieciséis */
+    glosor: [
+      { es:"cero",        sv:"noll" },
+      { es:"uno",         sv:"ett",     svAlt:["en"] },
+      { es:"dos",         sv:"två" },
+      { es:"tres",        sv:"tre" },
+      { es:"cuatro",      sv:"fyra" },
+      { es:"cinco",       sv:"fem" },
+      { es:"seis",        sv:"sex" },
+      { es:"siete",       sv:"sju" },
+      { es:"ocho",        sv:"åtta" },
+      { es:"nueve",       sv:"nio" },
+      { es:"diez",        sv:"tio" },
+      { es:"once",        sv:"elva" },
+      { es:"doce",        sv:"tolv" },
+      { es:"trece",       sv:"tretton" },
+      { es:"catorce",     sv:"fjorton" },
+      { es:"quince",      sv:"femton" },
+      { es:"dieciséis",   sv:"sexton" },
+      { es:"diecisiete",  sv:"sjutton" },
+      { es:"dieciocho",   sv:"arton",   svAlt:["aderton"] },
+      { es:"diecinueve",  sv:"nitton" },
+      { es:"veinte",      sv:"tjugo" }
+    ]
+  },
+
   /* ---- Plugga: text att läsa eller lyssna på + ett prov --------------------
      stycken  ett kort per rubrik. Varje stycke har:
                 rubrik  rubriken (blir understruken, som i papperet)
