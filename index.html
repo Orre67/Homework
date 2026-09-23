@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Läxor</title>
-<meta name="description" content="Gustavs läxor – glosor, frågor och uppgifter.">
+<meta name="description" content="Läxor – glosor, frågor, klockan och uppgifter.">
 <meta name="theme-color" content="#10305F">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -288,6 +288,44 @@
   .say-row{text-align:center;margin:-10px 0 18px}
   .say-row[hidden]{display:none}
 
+  /* ---------- klockan ---------- */
+  .clock-wrap{margin:2px 0 6px}
+  .clock-wrap[hidden]{display:none}
+  .clock{
+    display:block;width:100%;max-width:300px;margin:0 auto;
+    touch-action:none;-webkit-user-select:none;user-select:none;
+    -webkit-tap-highlight-color:transparent;cursor:pointer;
+  }
+  .clock .dial{fill:#fff;stroke:var(--ink);stroke-width:3}
+  .clock .tick{stroke:var(--ink);stroke-width:2;opacity:.4}
+  .clock .tick.stor{stroke-width:4;opacity:1}
+  .clock .num{
+    font-family:var(--display);font-weight:800;font-size:20px;fill:var(--ink);
+    text-anchor:middle;dominant-baseline:central;
+  }
+  .clock .hand.min{fill:var(--ink);stroke:var(--ink)}
+  .clock .hand.tim{fill:var(--rojo);stroke:var(--rojo)}
+  .clock .pivot{fill:var(--ink)}
+  .clock.drar-min .hand.min,.clock.drar-tim .hand.tim{opacity:.65}
+  .clock.last{cursor:default}
+  .handpick{display:flex;gap:8px;margin:12px 0 0}
+  .pick{
+    flex:1;font-family:var(--body);font-size:.95rem;font-weight:700;line-height:1.2;
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:10px 8px;min-height:56px;cursor:pointer;color:var(--ink);
+    background:#fff;border:2px solid var(--tile-shade);-webkit-tap-highlight-color:transparent;
+  }
+  .pick i{font-style:normal;font-size:.78rem;font-weight:500;color:var(--muted)}
+  .pick.vald{border-color:var(--cobalt);background:#F0F4FD}
+  .pick.vald i{color:var(--cobalt)}
+  .clock-hint{text-align:center}
+  .clock-wrap.last .handpick,.clock-wrap.last .clock-hint{opacity:.45}
+  .prick{display:inline-block;width:11px;height:11px;margin-right:6px;border-radius:50%}
+  .prick.tim{background:var(--rojo)}
+  .prick.min{background:var(--ink)}
+  .facit{margin-top:12px}
+  .facit svg{width:116px;height:116px;display:block;margin:8px auto 0}
+
   /* ---------- specialtecken ovanför svarsrutan ---------- */
   .keys{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:0 0 4px}
   .keys[hidden]{display:none}
@@ -404,6 +442,7 @@
   <!-- glosor / frågor -->
   <div id="quizIntro" class="view" hidden>
     <section class="card">
+      <p class="lead" id="klockLead" hidden>Du får en tid i rutan. Dra visarna så att klockan visar den tiden.</p>
       <p class="best" id="bestLine"></p>
       <div class="modes" id="modes">
         <label class="mode"><input type="radio" name="mode" value="fram" checked> <span id="modeFram"></span></label>
@@ -414,7 +453,7 @@
       <button class="btn" id="startBtn">Starta förhöret</button>
       <p class="hint whoLine">Sparas som <b class="whoName"></b> · <button class="link dark inline changeName" type="button">byt namn</button></p>
     </section>
-    <section class="card">
+    <section class="card" id="wordsCard">
       <div class="cardhead">
         <h2 id="wordsHead">Orden</h2>
         <button class="btn small ghost" id="playAllBtn" hidden>Spela upp alla</button>
@@ -471,6 +510,29 @@
     <p class="prompt-lang" id="promptLang"></p>
     <p class="word" id="word">—</p>
     <div class="say-row" id="sayRow" hidden><button class="say" id="sayBtn" type="button" aria-label="Läs upp"></button></div>
+
+    <!-- klockan: visarna dras med fingret -->
+    <div class="clock-wrap" id="clockWrap" hidden>
+      <svg class="clock" id="clock" viewBox="0 0 200 200" role="application" aria-label="Klocka att ställa">
+        <circle class="dial" cx="100" cy="100" r="92"/>
+        <g id="clockDial"></g>
+        <g class="hand min" id="handMin" transform="rotate(0 100 100)">
+          <line x1="100" y1="100" x2="100" y2="42" stroke-width="4" stroke-linecap="round"/>
+          <polygon points="100,26 92,46 108,46"/>
+        </g>
+        <g class="hand tim" id="handTim" transform="rotate(0 100 100)">
+          <line x1="100" y1="100" x2="100" y2="66" stroke-width="5" stroke-linecap="round"/>
+          <polygon points="100,52 91,72 109,72"/>
+        </g>
+        <circle class="pivot" cx="100" cy="100" r="5"/>
+      </svg>
+      <div class="handpick" id="handPick">
+        <button class="pick" type="button" data-visare="tim"><span class="prick tim"></span>Timvisare<i>kort och röd</i></button>
+        <button class="pick" type="button" data-visare="min"><span class="prick min"></span>Minutvisare<i>lång och svart</i></button>
+      </div>
+      <p class="hint clock-hint">Dra i en visare, eller tryck på klockan så flyttas den valda visaren.</p>
+    </div>
+
     <div class="choices" id="choices" hidden></div>
     <div class="keys" id="keys" hidden></div>
     <input type="text" id="answer" placeholder="Skriv svaret" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
@@ -547,12 +609,13 @@ const SUBJECT_COLOR = {
   biologi:"var(--terra)", kemi:"var(--terra)", fysik:"var(--terra)", religion:"var(--terra)", samhallskunskap:"var(--terra)"
 };
 const subjectColor = amne => SUBJECT_COLOR[norm(amne)] || "var(--cobalt)";
-const isQuiz = l => l.typ === "glosor" || l.typ === "fragor" || l.typ === "plugga";
+const isQuiz = l => l.typ === "glosor" || l.typ === "fragor" || l.typ === "plugga" || l.typ === "klocka";
 
 function typLabel(l){
   if(l.typ === "glosor") return `Glosor · ${l.glosor.length} ord`;
   if(l.typ === "fragor") return `Frågor · ${l.fragor.length} st`;
   if(l.typ === "plugga") return `Läsa + prov · ${(l.fragor || []).length} frågor`;
+  if(l.typ === "klocka") return `Klockan · ${l.antal || 5} att ställa`;
   return l.steg && l.steg.length ? `Uppgift · ${l.steg.length} delar` : "Uppgift";
 }
 /* Sidorna i ett förhör: a = det som visas i "fram"-läget, b = svaret. */
@@ -567,6 +630,7 @@ function pairsOf(l){
       a:g[k], b:g.sv, aAlt:g[k+"Alt"] || [], bAlt:g.svAlt || g.sv0 || [], exakt:!!(g.exakt || l.exakt)
     }));
   }
+  if(l.typ === "klocka") return klockPar(l);
   if(l.typ === "fragor" || l.typ === "plugga"){
     /* Med fel-lista blir frågan flerval: val = rätt svar + felen (blandas vid visning). */
     return (l.fragor || []).map(f => ({
@@ -755,6 +819,10 @@ function bildHtml(b){
 function renderQuizIntro(l){
   const [A, B] = labels(l);
   const glosor = l.typ === "glosor";
+  const klocka = l.typ === "klocka";
+  el("wordsCard").hidden = klocka;                 // klockslagen lottas fram, ingen lista
+  el("startBtn").textContent = klocka ? "Starta" : "Starta förhöret";
+  el("klockLead").hidden = !klocka;
   const tts = glosor && TTS;
   el("modes").hidden = !glosor;
   el("modeFram").textContent = `${A} → ${B}`;
@@ -878,6 +946,117 @@ let queue = [], i = 0, results = [], answered = false, mode = "fram";
 const wordEl = el("word"), input = el("answer"), feedback = el("feedback"),
       checkBtn = el("checkBtn"), revealBtn = el("revealBtn"), mosaic = el("mosaic");
 
+/* ---------- Klockan: dra visarna ----------
+   Visarna snäpper mot siffrorna i l.snap ([12,3,6,9] på första nivån).
+   Timvisaren står på hel timme även på "halv" och "kvart i", som i skolboken. */
+const clockSvg = el("clock");
+let klockH = 12, klockM = 0, drar = null, klockLast = false, klockRord = false;
+
+const klockText = (h, m) => `${h}:${String(m).padStart(2, "0")}`;
+const snapLista = () => (L && L.snap) || [12, 3, 6, 9];
+const snapVinklar = () => snapLista().map(h => (h % 12) * 30);
+
+function klockDial(){
+  let s = "";
+  for(let n = 0; n < 12; n++){
+    const stor = n % 3 === 0;
+    s += `<line class="tick${stor ? " stor" : ""}" x1="100" y1="${stor ? 10 : 12}" x2="100" y2="${stor ? 22 : 19}" transform="rotate(${n * 30} 100 100)"/>`;
+  }
+  [[12, 100, 38], [3, 162, 100], [6, 100, 162], [9, 38, 100]].forEach(([n, x, y]) =>
+    s += `<text class="num" x="${x}" y="${y}">${n}</text>`);
+  return s;
+}
+el("clockDial").innerHTML = klockDial();
+
+/* Liten klocka som visar facit i feedbacken */
+const litenKlocka = (h, m) => `<svg class="clock" viewBox="0 0 200 200" role="img" aria-label="Klockan ${klockText(h, m)}">
+  <circle class="dial" cx="100" cy="100" r="92"/>${klockDial()}
+  <g class="hand min" transform="rotate(${m * 6} 100 100)"><line x1="100" y1="100" x2="100" y2="42" stroke-width="4" stroke-linecap="round"/><polygon points="100,26 92,46 108,46"/></g>
+  <g class="hand tim" transform="rotate(${(h % 12) * 30} 100 100)"><line x1="100" y1="100" x2="100" y2="66" stroke-width="5" stroke-linecap="round"/><polygon points="100,52 91,72 109,72"/></g>
+  <circle class="pivot" cx="100" cy="100" r="5"/></svg>`;
+
+function ritaVisare(){
+  el("handTim").setAttribute("transform", `rotate(${(klockH % 12) * 30} 100 100)`);
+  el("handMin").setAttribute("transform", `rotate(${klockM * 6} 100 100)`);
+}
+function satKlocka(h, m){ klockH = h; klockM = m; ritaVisare(); }
+
+const avstand = (a, b) => { const d = Math.abs(a - b) % 360; return Math.min(d, 360 - d); };
+
+function pekaren(e){
+  const r = clockSvg.getBoundingClientRect();
+  const x = e.clientX - (r.left + r.width / 2), y = e.clientY - (r.top + r.height / 2);
+  let ang = Math.atan2(x, -y) * 180 / Math.PI;
+  return { ang: ang < 0 ? ang + 360 : ang, r: Math.hypot(x, y) / (r.width / 2) * 100 };
+}
+/* Trycker man i eller nära en visare tar man tag i den, annars flyttas den
+   visare som är vald med knapparna under klockan. */
+let valdVisare = "tim";
+function valjVisare(v){
+  valdVisare = v;
+  el("handPick").querySelectorAll(".pick").forEach(b => b.classList.toggle("vald", b.dataset.visare === v));
+}
+el("handPick").addEventListener("click", e => {
+  const b = e.target.closest("[data-visare]");
+  if(b && !klockLast) valjVisare(b.dataset.visare);
+});
+
+function narmasteVisare(p){
+  const dt = avstand((klockH % 12) * 30, p.ang), dm = avstand(klockM * 6, p.ang);
+  if(Math.min(dt, dm) > 22) return valdVisare;                  // långt från båda visarna
+  if(Math.abs(dt - dm) < 12) return p.r > 52 ? "min" : "tim";   // visarna pekar åt samma håll
+  return dt < dm ? "tim" : "min";
+}
+function flyttaVisare(p){
+  let bast = snapVinklar()[0];
+  snapVinklar().forEach(a => { if(avstand(a, p.ang) < avstand(bast, p.ang)) bast = a; });
+  if(drar === "tim") klockH = bast / 30 || 12; else klockM = bast / 6;
+  klockRord = true;
+  clockSvg.classList.toggle("drar-tim", drar === "tim");
+  clockSvg.classList.toggle("drar-min", drar === "min");
+  ritaVisare();
+}
+clockSvg.addEventListener("pointerdown", e => {
+  if(klockLast) return;
+  e.preventDefault();
+  const p = pekaren(e);
+  drar = narmasteVisare(p);
+  valjVisare(drar);
+  try{ clockSvg.setPointerCapture(e.pointerId); }catch{}
+  flyttaVisare(p);
+});
+clockSvg.addEventListener("pointermove", e => { if(drar && !klockLast) flyttaVisare(pekaren(e)); });
+const slutaDra = () => { drar = null; clockSvg.classList.remove("drar-tim", "drar-min"); };
+clockSvg.addEventListener("pointerup", slutaDra);
+clockSvg.addEventListener("pointercancel", slutaDra);
+
+/* Klockslagen som kan komma: ett par per timme i snap × vald form. */
+const KLOCKFORMER = [
+  { id:"hel",  m:0,  text:h => `Klockan ${h}` },
+  { id:"over", m:15, text:h => `Kvart över ${h}` },
+  { id:"halv", m:30, text:h => `Halv ${h % 12 + 1}` },
+  { id:"i",    m:45, text:h => `Kvart i ${h % 12 + 1}` }
+];
+function klockPar(l){
+  const former = KLOCKFORMER.filter(f => !l.former || l.former.includes(f.id));
+  const alla = [];
+  (l.snap || [12, 3, 6, 9]).forEach(h => former.forEach(f => alla.push({ h, m:f.m, q:f.text(h) })));
+  return shuffle(alla).slice(0, l.antal || 5).map(t => ({
+    a:t.q, b:klockText(t.h, t.m), aAlt:[], bAlt:[], exakt:false, klocka:{ h:t.h, m:t.m }
+  }));
+}
+/* Slumpat utgångsläge, men aldrig det rätta svaret. */
+function startlage(p){
+  const snap = snapLista();
+  const slump = () => snap[Math.random() * snap.length | 0];
+  let h, m, n = 0;
+  do {
+    h = slump(); m = (slump() % 12) * 5;
+  } while(++n < 30 && ((h === p.klocka.h && m === p.klocka.m)   // aldrig rätt svar från start
+                       || (h % 12) * 30 === m * 6));           // och visarna ska inte ligga på varandra
+  satKlocka(h, m);
+}
+
 /* Specialtecken: knappar som skriver tecknet där markören står, så att man
    slipper byta till ett spanskt tangentbord på mobilen. */
 const SPECIALTECKEN = {
@@ -935,7 +1114,8 @@ function render(){
   el("counter").textContent = `${i + 1} av ${queue.length}`;
   el("qBild").hidden = !p.bild;
   el("qBild").innerHTML = p.bild ? bildHtml(p.bild) : "";
-  el("promptLang").textContent = lyssna ? "Lyssna" : p.dir === "fram" ? A : B;
+  el("promptLang").textContent = p.klocka ? "Sätt visarna så att klockan visar"
+    : lyssna ? "Lyssna" : p.dir === "fram" ? A : B;
   el("promptLang").hidden = !!p.val;
   const shown = lyssna ? "• • •" : p.dir === "fram" ? p.a : p.b;
   wordEl.textContent = shown;
@@ -948,9 +1128,23 @@ function render(){
   checkBtn.textContent = "Rätta";
   revealBtn.hidden = false;
 
+  /* Klockan: ingen skrivruta, visarna dras i stället. */
+  el("clockWrap").hidden = !p.klocka;
+  klockLast = false;
+  if(p.klocka){
+    clockSvg.classList.remove("last");
+    el("clockWrap").classList.remove("last");
+    valjVisare("tim");
+    startlage(p);
+    klockRord = false;
+  }
+
   /* Flerval: knappar i stället för skrivfält, Nästa-knappen visas först när man svarat. */
   input.hidden = el("quizRow").hidden = el("choices").hidden = false;
-  if(p.val){
+  if(p.klocka){
+    input.hidden = true;
+    el("choices").hidden = true;
+  }else if(p.val){
     input.hidden = el("quizRow").hidden = true;
     el("choices").innerHTML = shuffle(p.val.slice()).map(o =>
       `<button class="choice" type="button" data-choice="${esc(o)}">${esc(o)}</button>`).join("");
@@ -962,7 +1156,7 @@ function render(){
   el("sayRow").hidden = !(TTS && (L.typ === "glosor" ? p.dir === "fram" : L.typ === "plugga"));
   renderKeys(L.typ === "glosor" && p.dir === "bak" && !p.val);   // svaret skrivs på språket
   paintMosaic();
-  if(p.val) input.blur(); else input.focus();
+  if(p.val || p.klocka) input.blur(); else input.focus();
   if(lyssna) speak(p.a);
 }
 
@@ -980,7 +1174,10 @@ function isCorrect(p, given){
 
 function check(revealed, picked){
   const p = queue[i];
-  const given = picked ?? input.value.trim();
+  /* Har hon inte rört visarna räknas det som inget svar – annars blir
+     utgångsläget "hennes svar" i adminvyn. */
+  const given = picked ?? (p.klocka ? (klockRord ? klockText(klockH, klockM) : "") : input.value.trim());
+  if(p.klocka && revealed) satKlocka(p.klocka.h, p.klocka.m);       // "Visa svar" ställer klockan
   const correct = !revealed && given !== "" && isCorrect(p, given);
   const facit = p.dir === "fram" ? p.b : p.a;
 
@@ -990,6 +1187,7 @@ function check(revealed, picked){
   input.classList.add("locked");
   el("keys").hidden = true;
   revealBtn.hidden = true;
+  if(p.klocka){ klockLast = true; slutaDra(); clockSvg.classList.add("last"); el("clockWrap").classList.add("last"); }
   checkBtn.textContent = i === queue.length - 1 ? "Se resultat" : "Nästa";
 
   if(p.val){
@@ -1000,6 +1198,16 @@ function check(revealed, picked){
     });
     el("quizRow").hidden = false;
     feedback.innerHTML = correct ? '<span class="ok">Rätt!</span>' : '<span class="no">Fel</span><div class="hint">Rätt svar är grönmarkerat.</div>';
+    paintMosaic();
+    return;
+  }
+
+  if(p.klocka){
+    feedback.innerHTML = correct
+      ? `<span class="ok">Rätt!</span><div class="hint">${esc(p.a)} är ${esc(p.b)}</div>`
+      : `<span class="no">${revealed ? "Rätt svar" : "Inte riktigt"}</span>
+         <div class="hint">${esc(p.a)} är <b>${esc(p.b)}</b>${!given || revealed || given === p.b ? "" : ` – du ställde den på ${esc(given)}`}</div>
+         <div class="facit">${litenKlocka(p.klocka.h, p.klocka.m)}</div>`;
     paintMosaic();
     return;
   }
@@ -1100,7 +1308,10 @@ el("provBtn").onclick = el("provBtn2").onclick = () => { mode = "fram"; startQui
 el("shortBtn").onclick = () => { mode = "fram"; startQuiz(shuffle(PAIRS.slice()).slice(0, 10)); };
 el("playAllBtn").onclick = playAll;
 el("quitBtn").onclick = () => renderLaxa(L);
-el("againBtn").onclick = () => startQuiz(lastList || PAIRS);
+el("againBtn").onclick = () => {
+  if(L.typ === "klocka"){ PAIRS = pairsOf(L); startQuiz(PAIRS); return; }   // nya klockslag
+  startQuiz(lastList || PAIRS);
+};
 el("backBtn").onclick = () => renderLaxa(L);
 
 checkBtn.onclick  = () => answered ? next() : check(false);

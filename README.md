@@ -4,7 +4,7 @@ Statisk sida + en liten API-funktion. Inga byggsteg, inga npm-paket.
 
 ```
 laxor.js            veckans läxor – den enda filen som ändras varje vecka
-index.html          appen som Gustav använder (startsida, läxor, förhör)
+index.html          appen som barnen använder (startsida, läxor, förhör)
 admin.html          resultatvyn, ligger på /admin
 api/results.js      sparar och hämtar rundor
 manifest.webmanifest + icon-*.png   gör att sidan kan läggas på hemskärmen som en app
@@ -13,7 +13,7 @@ manifest.webmanifest + icon-*.png   gör att sidan kan läggas på hemskärmen s
 ## Lägga in veckans läxor
 
 Öppna `laxor.js`. Varje läxa är ett objekt i listan `LAXOR` med `id`, `amne`,
-`titel`, `till` (sista dag) och `typ`. Det finns fyra typer:
+`titel`, `till` (sista dag) och `typ`. Det finns fem typer:
 
 **Glosor** – förhörs åt båda hållen, kan läsas upp.
 
@@ -101,6 +101,30 @@ beskurna till bara symbolen (utan partinamn):
 
 Byter ett parti symbol räcker det att ersätta filen.
 
+**Klocka** – en klocka där visarna dras med fingret tills den visar tiden i rutan.
+Gjord för iPad och mobil.
+
+```js
+{
+  id: "klockan-elsa", amne: "Matte", titel: "Klockan – hel, halv och kvart",
+  typ: "klocka",
+  antal: 5,                        // klockslag per omgång
+  snap: [12, 3, 6, 9],             // siffrorna visarna snäpper mot, och timmarna som används
+  former: ["hel", "over", "halv", "i"]
+}
+```
+
+Klockslagen lottas fram varje gång, så frågorna blir nya. `former` styr vilka
+slags tider som kommer: `hel` ("Klockan 6"), `over` ("Kvart över 6"),
+`halv` ("Halv 7") och `i` ("Kvart i 7"). Timvisaren står på hel timme även på
+halv och kvart i, som i skolboken.
+
+Nästa nivå görs genom att låta visarna snäppa mot alla siffror:
+`snap: [1,2,3,4,5,6,7,8,9,10,11,12]`.
+
+I adminvyn listas bara de klockslag som faktiskt blivit fel, med vad hon ställde
+klockan på. Trycker man "Visa svar" sparas det som inget svar.
+
 **Uppgift** – något som ska göras och bockas av. `steg` och `lank` är valfria.
 
 ```js
@@ -125,7 +149,7 @@ Svenska rött, SO/NO orange. Okända ämnen blir blå.
 
 Pusha mappen till ett Git-repo och importera det på vercel.com/new. Framework preset: **Other**. Inga build-inställningar behövs.
 
-Appen funkar direkt. Resultaten sparas då bara i Gustavs egen webbläsare, och adminvyn visar bara det som gjorts på just den enheten.
+Appen funkar direkt. Resultaten sparas då bara i barnets egen webbläsare, och adminvyn visar bara det som gjorts på just den enheten.
 
 På telefonen: öppna sidan i Safari/Chrome och välj "Lägg till på hemskärmen", så får den egen ikon och öppnas utan webbläsarens adressfält.
 

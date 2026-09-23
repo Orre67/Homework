@@ -126,7 +126,7 @@
 <header class="hero">
   <p class="eyebrow">Adminvy</p>
   <h1>Hur går det?</h1>
-  <p class="sub">Gustavs läxor</p>
+  <p class="sub">Gustavs och Elsas läxor</p>
 </header>
 
 <!-- LÅS -->
@@ -244,7 +244,7 @@ function laxaList(){
 const roundsFor = id => ROUNDS.filter(r => r.laxa === id).sort((a,b) => new Date(b.ts) - new Date(a.ts));
 const isQuiz = l => l.typ !== "uppgift";
 /* Hela rundor = alla ord. Kortare rundor kommer från "Öva på felen". */
-const sizeOf = l => l.glosor ? l.glosor.length : l.fragor ? l.fragor.length : 0;
+const sizeOf = l => l.glosor ? l.glosor.length : l.fragor ? l.fragor.length : l.antal || 0;
 const fullSize = (l, rs) => sizeOf(l) || Math.max(...rs.map(r => r.total));
 const fullRounds = (l, rs) => rs.filter(r => r.total >= fullSize(l, rs));
 
@@ -302,7 +302,7 @@ function renderDetail(){
   el("overview").hidden = !quiz;
   el("hardCard").hidden = !quiz;
   el("roundsHead").textContent = quiz ? "Varje runda" : "Avbockat";
-  el("hardHead").textContent = l.typ === "glosor" ? "Ord han fastnar på" : "Frågor han fastnar på";
+  el("hardHead").textContent = l.typ === "glosor" ? "Ord som blir fel" : l.typ === "klocka" ? "Klockslag som blir fel" : "Frågor som blir fel";
 
   if(!rs.length){
     el("hard").innerHTML = '<li class="empty">Inga rundor gjorda än.</li>';
@@ -334,7 +334,9 @@ function renderDetail(){
       const s = stats.get(it.q); s.n++;
       if(!it.correct){ s.miss++; if(it.given) s.wrong.push(it.given); }
     }));
-    const words = [...stats.values()].sort((a,b) =>
+    /* Klockslagen lottas fram, så där visas bara de som faktiskt blivit fel. */
+    const bara_fel = l.typ === "klocka";
+    const words = [...stats.values()].filter(w => !bara_fel || w.miss).sort((a,b) =>
       (b.miss/b.n) - (a.miss/a.n) || b.miss - a.miss || a.q.localeCompare(b.q, "sv"));
     el("hard").innerHTML = words.map(w => {
       const rate = pct(w.miss, w.n), guesses = [...new Set(w.wrong)].slice(0, 3).join(", ");

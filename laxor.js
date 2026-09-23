@@ -81,6 +81,25 @@ const LAXOR = [
     ]
   },
 
+  /* ---- Klocka: dra visarna så att klockan visar rätt tid ------------------
+     antal   hur många klockslag per omgång (5 som standard)
+     snap    siffrorna visarna snäpper mot, och de timmar som används.
+             [12,3,6,9] = första nivån. Nästa nivå: alla tolv siffrorna,
+             snap: [1,2,3,4,5,6,7,8,9,10,11,12]
+     former  vilka slags klockslag som kommer: "hel", "over" (kvart över),
+             "halv", "i" (kvart i). Utelämnad = alla fyra.
+     Klockslagen lottas fram på nytt varje gång, så det blir nya frågor.
+  --------------------------------------------------------------------------- */
+  {
+    id: "klockan-elsa",
+    amne: "Matte",
+    titel: "Klockan – hel, halv och kvart",
+    typ: "klocka",
+    antal: 5,
+    snap: [12, 3, 6, 9],
+    former: ["hel", "over", "halv", "i"]
+  },
+
   /* ---- Plugga: text att läsa eller lyssna på + ett prov --------------------
      stycken  ett kort per rubrik. Varje stycke har:
                 rubrik  rubriken (blir understruken, som i papperet)
