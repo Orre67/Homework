@@ -115,8 +115,11 @@ rutan. Gjord för iPad och mobil.
 
 Klockslagen lottas fram varje gång, så frågorna blir nya. `former` styr vilka
 slags tider som kommer: `hel` ("Klockan 5"), `over` ("Kvart över 5"),
-`halv` ("Halv 6") och `i` ("Kvart i 6"). Timvisaren står på hel timme även
-på halv och kvart i, som i skolboken.
+`halv` ("Halv 6") och `i` ("Kvart i 6").
+
+Timvisaren glider med minuterna som på en riktig klocka: ställer man minutvisaren
+på halv hamnar timvisaren mitt emellan de två timmarna. Den snäpper alltid till
+en hel timme, men visas med minuternas glid.
 
 Visarna är egna enheter: man tar tag i en och drar runt den, och den snäpper på
 plats. Ett tryck vid sidan av visarna gör ingenting, så det blir aldrig fel

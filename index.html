@@ -979,11 +979,15 @@ el("clockDial").innerHTML = klockDial();
 const litenKlocka = (h, m) => `<svg class="clock" viewBox="0 0 200 200" role="img" aria-label="Klockan ${klockText(h, m)}">
   <circle class="dial" cx="100" cy="100" r="92"/>${klockDial()}
   <g class="hand min" transform="rotate(${m * 6} 100 100)"><line x1="100" y1="100" x2="100" y2="50" stroke-width="4" stroke-linecap="round"/><polygon points="100,34 92,54 108,54"/></g>
-  <g class="hand tim" transform="rotate(${(h % 12) * 30} 100 100)"><line x1="100" y1="100" x2="100" y2="70" stroke-width="5" stroke-linecap="round"/><polygon points="100,54 91,74 109,74"/></g>
+  <g class="hand tim" transform="rotate(${timVinkel(h, m)} 100 100)"><line x1="100" y1="100" x2="100" y2="70" stroke-width="5" stroke-linecap="round"/><polygon points="100,54 91,74 109,74"/></g>
   <circle class="pivot" cx="100" cy="100" r="5"/></svg>`;
 
+/* Timvisaren glider med minuterna, som på en riktig klocka: halv sju står den
+   mitt emellan 6 och 7. En halv grad per minut. */
+const timVinkel = (h, m) => (((h % 12) * 30 + m * 0.5) % 360 + 360) % 360;
+
 function ritaVisare(){
-  el("handTim").setAttribute("transform", `rotate(${(klockH % 12) * 30} 100 100)`);
+  el("handTim").setAttribute("transform", `rotate(${timVinkel(klockH, klockM)} 100 100)`);
   el("handMin").setAttribute("transform", `rotate(${klockM * 6} 100 100)`);
 }
 function satKlocka(h, m){ klockH = h; klockM = m; ritaVisare(); }
@@ -1011,8 +1015,10 @@ function visaGrepp(){
 
 function flyttaVisare(p){
   const lagen = drar === "tim" ? timVinklar() : minutVinklar();
+  /* Timvisaren mäts mot hel timme, alltså utan minuternas glid. */
+  const mal = drar === "tim" ? (((p.ang - klockM * 0.5) % 360) + 360) % 360 : p.ang;
   let bast = lagen[0];
-  lagen.forEach(a => { if(avstand(a, p.ang) < avstand(bast, p.ang)) bast = a; });
+  lagen.forEach(a => { if(avstand(a, mal) < avstand(bast, mal)) bast = a; });
   if(drar === "tim") klockH = bast / 30 || 12; else klockM = bast / 6;
   klockRord = true;
   ritaVisare();
@@ -1053,8 +1059,8 @@ function startlage(p){
   let h, m, n = 0;
   do {
     h = slump(timmar); m = slump(minuter);
-  } while(++n < 30 && ((h === p.klocka.h && m === p.klocka.m)   // aldrig rätt svar från start
-                       || (h % 12) * 30 === m * 6));           // och visarna ska inte ligga på varandra
+  } while(++n < 30 && ((h === p.klocka.h && m === p.klocka.m)        // aldrig rätt svar från start
+                       || avstand(timVinkel(h, m), m * 6) < 20));    // visarna ska inte ligga på varandra
   satKlocka(h, m);
 }
 
