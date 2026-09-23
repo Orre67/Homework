@@ -958,17 +958,14 @@ const TIMMAR = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 /* Lägen visarna snäpper till, i grader. Timvisaren till timmarna som används,
    minutvisaren till de minuter som kan komma (hel, kvart, halv). */
 const timVinklar = () => ((L && L.timmar) || TIMMAR).map(h => (h % 12) * 30);
-const minutVinklar = () => {
-  const l = L || {};
-  const former = KLOCKFORMER.filter(f => !l.former || l.former.includes(f.id));
-  return (l.minuter || [...new Set(former.map(f => f.m))]).map(m => m * 6);
-};
+/* Minutvisaren snäpper till varje siffra (fem minuter), om inget annat anges. */
+const minutVinklar = () => ((L && L.minuter) || TIMMAR.map(h => (h % 12) * 5)).map(m => m * 6);
 
 function klockDial(){
   let s = "";
   for(let n = 0; n < 12; n++){
     const stor = n % 3 === 0;
-    s += `<line class="tick${stor ? " stor" : ""}" x1="100" y1="${stor ? 10 : 12}" x2="100" y2="${stor ? 22 : 19}" transform="rotate(${n * 30} 100 100)"/>`;
+    s += `<line class="tick${stor ? " stor" : ""}" x1="100" y1="${stor ? 9 : 11}" x2="100" y2="${stor ? 17 : 18}" transform="rotate(${n * 30} 100 100)"/>`;
   }
   TIMMAR.forEach(n => {                                   // alla tolv siffrorna
     const v = (n % 12) * 30 * Math.PI / 180, r = 74;
