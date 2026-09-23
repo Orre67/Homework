@@ -306,7 +306,9 @@
   .clock .hand.min{fill:var(--ink);stroke:var(--ink)}
   .clock .hand.tim{fill:var(--rojo);stroke:var(--rojo)}
   .clock .pivot{fill:var(--ink)}
-  .clock.drar-min .hand.min,.clock.drar-tim .hand.tim{opacity:.65}
+  .clock.valj-tim .hand.min,.clock.valj-min .hand.tim{opacity:.4}
+  .clock.last .hand{opacity:1}
+  .clock.drar-min .hand.min,.clock.drar-tim .hand.tim{opacity:.7}
   .clock.last{cursor:default}
   .handpick{display:flex;gap:8px;margin:12px 0 0}
   .pick{
@@ -530,7 +532,7 @@
         <button class="pick" type="button" data-visare="tim"><span class="prick tim"></span>Timvisare<i>kort och röd</i></button>
         <button class="pick" type="button" data-visare="min"><span class="prick min"></span>Minutvisare<i>lång och svart</i></button>
       </div>
-      <p class="hint clock-hint">Dra i en visare, eller tryck på klockan så flyttas den valda visaren.</p>
+      <p class="hint clock-hint">Välj visare, tryck sedan på siffran den ska peka mot. Den går också att dra.</p>
     </div>
 
     <div class="choices" id="choices" hidden></div>
@@ -989,24 +991,21 @@ function pekaren(e){
   let ang = Math.atan2(x, -y) * 180 / Math.PI;
   return { ang: ang < 0 ? ang + 360 : ang, r: Math.hypot(x, y) / (r.width / 2) * 100 };
 }
-/* Trycker man i eller nära en visare tar man tag i den, annars flyttas den
-   visare som är vald med knapparna under klockan. */
+/* Knapparna under klockan bestämmer vilken visare som flyttas – alltid den
+   valda, så det aldrig blir fel visare när man trycker där den andra står.
+   Den som inte är vald tonas ner. */
 let valdVisare = "tim";
 function valjVisare(v){
   valdVisare = v;
   el("handPick").querySelectorAll(".pick").forEach(b => b.classList.toggle("vald", b.dataset.visare === v));
+  clockSvg.classList.toggle("valj-tim", v === "tim");
+  clockSvg.classList.toggle("valj-min", v === "min");
 }
 el("handPick").addEventListener("click", e => {
   const b = e.target.closest("[data-visare]");
   if(b && !klockLast) valjVisare(b.dataset.visare);
 });
 
-function narmasteVisare(p){
-  const dt = avstand((klockH % 12) * 30, p.ang), dm = avstand(klockM * 6, p.ang);
-  if(Math.min(dt, dm) > 22) return valdVisare;                  // långt från båda visarna
-  if(Math.abs(dt - dm) < 12) return p.r > 52 ? "min" : "tim";   // visarna pekar åt samma håll
-  return dt < dm ? "tim" : "min";
-}
 function flyttaVisare(p){
   let bast = snapVinklar()[0];
   snapVinklar().forEach(a => { if(avstand(a, p.ang) < avstand(bast, p.ang)) bast = a; });
@@ -1020,8 +1019,7 @@ clockSvg.addEventListener("pointerdown", e => {
   if(klockLast) return;
   e.preventDefault();
   const p = pekaren(e);
-  drar = narmasteVisare(p);
-  valjVisare(drar);
+  drar = valdVisare;
   try{ clockSvg.setPointerCapture(e.pointerId); }catch{}
   flyttaVisare(p);
 });
