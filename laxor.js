@@ -83,11 +83,13 @@ const LAXOR = [
 
   /* ---- Klocka: dra visarna så att klockan visar rätt tid ------------------
      antal   hur många klockslag per omgång (5 som standard)
-     snap    siffrorna visarna snäpper mot, och de timmar som används.
-             [12,3,6,9] = första nivån. Nästa nivå: alla tolv siffrorna,
-             snap: [1,2,3,4,5,6,7,8,9,10,11,12]
-     former  vilka slags klockslag som kommer: "hel", "over" (kvart över),
-             "halv", "i" (kvart i). Utelämnad = alla fyra.
+     former  vilka slags klockslag som kommer: "hel" (Klockan 5), "over"
+             (Kvart över 5), "halv" (Halv 6), "i" (Kvart i 6).
+             Utelämnad = alla fyra.
+     timmar  vilka timmar som kan komma, och där timvisaren snäpper.
+             Utelämnad = alla tolv.
+     minuter var minutvisaren snäpper. Utelämnad = de minuter som formerna
+             behöver (0, 15, 30, 45). Nästa nivå: [0,5,10,15,...,55].
      Klockslagen lottas fram på nytt varje gång, så det blir nya frågor.
   --------------------------------------------------------------------------- */
   {
@@ -96,7 +98,6 @@ const LAXOR = [
     titel: "Klockan – hel, halv och kvart",
     typ: "klocka",
     antal: 5,
-    snap: [12, 3, 6, 9],
     former: ["hel", "over", "halv", "i"]
   },
 

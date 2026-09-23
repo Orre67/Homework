@@ -101,26 +101,36 @@ beskurna till bara symbolen (utan partinamn):
 
 Byter ett parti symbol räcker det att ersätta filen.
 
-**Klocka** – en klocka där visarna dras med fingret tills den visar tiden i rutan.
-Gjord för iPad och mobil.
+**Klocka** – en klocka där visarna dras runt med fingret tills den visar tiden i
+rutan. Gjord för iPad och mobil.
 
 ```js
 {
   id: "klockan-elsa", amne: "Matte", titel: "Klockan – hel, halv och kvart",
   typ: "klocka",
-  antal: 5,                        // klockslag per omgång
-  snap: [12, 3, 6, 9],             // siffrorna visarna snäpper mot, och timmarna som används
+  antal: 5,                          // klockslag per omgång
   former: ["hel", "over", "halv", "i"]
 }
 ```
 
 Klockslagen lottas fram varje gång, så frågorna blir nya. `former` styr vilka
-slags tider som kommer: `hel` ("Klockan 6"), `over` ("Kvart över 6"),
-`halv` ("Halv 7") och `i` ("Kvart i 7"). Timvisaren står på hel timme även på
-halv och kvart i, som i skolboken.
+slags tider som kommer: `hel` ("Klockan 5"), `over` ("Kvart över 5"),
+`halv` ("Halv 6") och `i` ("Kvart i 6"). Timvisaren står på hel timme även
+på halv och kvart i, som i skolboken.
 
-Nästa nivå görs genom att låta visarna snäppa mot alla siffror:
-`snap: [1,2,3,4,5,6,7,8,9,10,11,12]`.
+Visarna är egna enheter: man tar tag i en och drar runt den, och den snäpper på
+plats. Ett tryck vid sidan av visarna gör ingenting, så det blir aldrig fel
+visare. Rutan under klockan visar vilken visare man håller i. Ligger visarna på
+varandra tar man minutvisaren längst ut och timvisaren närmare mitten.
+
+Två valfria fält styr svårighetsgraden:
+
+| Fält | Betyder | Utelämnat |
+|---|---|---|
+| `timmar` | vilka timmar som kan komma, och var timvisaren snäpper | alla tolv |
+| `minuter` | var minutvisaren snäpper | de minuter formerna behöver (0, 15, 30, 45) |
+
+Lättare start: `timmar: [12, 3, 6, 9]`. Nästa nivå: `minuter: [0,5,10,15,20,25,30,35,40,45,50,55]`.
 
 I adminvyn listas bara de klockslag som faktiskt blivit fel, med vad hon ställde
 klockan på. Trycker man "Visa svar" sparas det som inget svar.

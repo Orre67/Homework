@@ -300,28 +300,29 @@
   .clock .tick{stroke:var(--ink);stroke-width:2;opacity:.4}
   .clock .tick.stor{stroke-width:4;opacity:1}
   .clock .num{
-    font-family:var(--display);font-weight:800;font-size:20px;fill:var(--ink);
+    font-family:var(--display);font-weight:700;font-size:17px;fill:var(--ink);
     text-anchor:middle;dominant-baseline:central;
   }
+  .clock .num.kvart{font-weight:800;font-size:21px}
   .clock .hand.min{fill:var(--ink);stroke:var(--ink)}
   .clock .hand.tim{fill:var(--rojo);stroke:var(--rojo)}
   .clock .pivot{fill:var(--ink)}
-  .clock.valj-tim .hand.min,.clock.valj-min .hand.tim{opacity:.4}
-  .clock.last .hand{opacity:1}
-  .clock.drar-min .hand.min,.clock.drar-tim .hand.tim{opacity:.7}
-  .clock.last{cursor:default}
-  .handpick{display:flex;gap:8px;margin:12px 0 0}
-  .pick{
-    flex:1;font-family:var(--body);font-size:.95rem;font-weight:700;line-height:1.2;
-    display:flex;flex-direction:column;align-items:center;gap:2px;
-    padding:10px 8px;min-height:56px;cursor:pointer;color:var(--ink);
-    background:#fff;border:2px solid var(--tile-shade);-webkit-tap-highlight-color:transparent;
+  /* Osynlig träffyta så att ett barnfinger får tag i visaren */
+  .clock .grip{stroke:transparent;stroke-width:30;stroke-linecap:round;fill:none;pointer-events:stroke;cursor:grab}
+  .clock .hand.haller{filter:drop-shadow(0 3px 4px rgba(11,27,51,.4))}
+  .clock .hand.haller .grip{cursor:grabbing}
+  .clock .hand.min.haller .stam{stroke-width:6}
+  .clock .hand.tim.haller .stam{stroke-width:7}
+  .clock.last .grip{cursor:default;pointer-events:none}
+  .clock-status{
+    display:flex;align-items:center;justify-content:center;gap:0;
+    min-height:44px;margin:10px 0 0;padding:8px 10px;
+    background:#fff;border:2px solid var(--tile-shade);
+    font-size:.95rem;color:var(--muted);text-align:center;line-height:1.3;
   }
-  .pick i{font-style:normal;font-size:.78rem;font-weight:500;color:var(--muted)}
-  .pick.vald{border-color:var(--cobalt);background:#F0F4FD}
-  .pick.vald i{color:var(--cobalt)}
-  .clock-hint{text-align:center}
-  .clock-wrap.last .handpick,.clock-wrap.last .clock-hint{opacity:.45}
+  .clock-status.haller{border-color:var(--cobalt);background:#F0F4FD;color:var(--ink)}
+  .clock-status b{color:var(--ink)}
+  .clock-wrap.last .clock-status{opacity:.45}
   .prick{display:inline-block;width:11px;height:11px;margin-right:6px;border-radius:50%}
   .prick.tim{background:var(--rojo)}
   .prick.min{background:var(--ink)}
@@ -519,20 +520,18 @@
         <circle class="dial" cx="100" cy="100" r="92"/>
         <g id="clockDial"></g>
         <g class="hand min" id="handMin" transform="rotate(0 100 100)">
-          <line x1="100" y1="100" x2="100" y2="42" stroke-width="4" stroke-linecap="round"/>
-          <polygon points="100,26 92,46 108,46"/>
+          <line class="grip" x1="100" y1="100" x2="100" y2="32"/>
+          <line class="stam" x1="100" y1="100" x2="100" y2="50" stroke-width="4" stroke-linecap="round"/>
+          <polygon points="100,34 92,54 108,54"/>
         </g>
         <g class="hand tim" id="handTim" transform="rotate(0 100 100)">
-          <line x1="100" y1="100" x2="100" y2="66" stroke-width="5" stroke-linecap="round"/>
-          <polygon points="100,52 91,72 109,72"/>
+          <line class="grip" x1="100" y1="100" x2="100" y2="52"/>
+          <line class="stam" x1="100" y1="100" x2="100" y2="70" stroke-width="5" stroke-linecap="round"/>
+          <polygon points="100,54 91,74 109,74"/>
         </g>
         <circle class="pivot" cx="100" cy="100" r="5"/>
       </svg>
-      <div class="handpick" id="handPick">
-        <button class="pick" type="button" data-visare="tim"><span class="prick tim"></span>Timvisare<i>kort och röd</i></button>
-        <button class="pick" type="button" data-visare="min"><span class="prick min"></span>Minutvisare<i>lång och svart</i></button>
-      </div>
-      <p class="hint clock-hint">Välj visare, tryck sedan på siffran den ska peka mot. Den går också att dra.</p>
+      <p class="clock-status" id="clockStatus"></p>
     </div>
 
     <div class="choices" id="choices" hidden></div>
@@ -955,8 +954,15 @@ const clockSvg = el("clock");
 let klockH = 12, klockM = 0, drar = null, klockLast = false, klockRord = false;
 
 const klockText = (h, m) => `${h}:${String(m).padStart(2, "0")}`;
-const snapLista = () => (L && L.snap) || [12, 3, 6, 9];
-const snapVinklar = () => snapLista().map(h => (h % 12) * 30);
+const TIMMAR = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+/* Lägen visarna snäpper till, i grader. Timvisaren till timmarna som används,
+   minutvisaren till de minuter som kan komma (hel, kvart, halv). */
+const timVinklar = () => ((L && L.timmar) || TIMMAR).map(h => (h % 12) * 30);
+const minutVinklar = () => {
+  const l = L || {};
+  const former = KLOCKFORMER.filter(f => !l.former || l.former.includes(f.id));
+  return (l.minuter || [...new Set(former.map(f => f.m))]).map(m => m * 6);
+};
 
 function klockDial(){
   let s = "";
@@ -964,8 +970,10 @@ function klockDial(){
     const stor = n % 3 === 0;
     s += `<line class="tick${stor ? " stor" : ""}" x1="100" y1="${stor ? 10 : 12}" x2="100" y2="${stor ? 22 : 19}" transform="rotate(${n * 30} 100 100)"/>`;
   }
-  [[12, 100, 38], [3, 162, 100], [6, 100, 162], [9, 38, 100]].forEach(([n, x, y]) =>
-    s += `<text class="num" x="${x}" y="${y}">${n}</text>`);
+  TIMMAR.forEach(n => {                                   // alla tolv siffrorna
+    const v = (n % 12) * 30 * Math.PI / 180, r = 74;
+    s += `<text class="num${n % 3 === 0 ? " kvart" : ""}" x="${(100 + Math.sin(v) * r).toFixed(1)}" y="${(100 - Math.cos(v) * r).toFixed(1)}">${n}</text>`;
+  });
   return s;
 }
 el("clockDial").innerHTML = klockDial();
@@ -973,8 +981,8 @@ el("clockDial").innerHTML = klockDial();
 /* Liten klocka som visar facit i feedbacken */
 const litenKlocka = (h, m) => `<svg class="clock" viewBox="0 0 200 200" role="img" aria-label="Klockan ${klockText(h, m)}">
   <circle class="dial" cx="100" cy="100" r="92"/>${klockDial()}
-  <g class="hand min" transform="rotate(${m * 6} 100 100)"><line x1="100" y1="100" x2="100" y2="42" stroke-width="4" stroke-linecap="round"/><polygon points="100,26 92,46 108,46"/></g>
-  <g class="hand tim" transform="rotate(${(h % 12) * 30} 100 100)"><line x1="100" y1="100" x2="100" y2="66" stroke-width="5" stroke-linecap="round"/><polygon points="100,52 91,72 109,72"/></g>
+  <g class="hand min" transform="rotate(${m * 6} 100 100)"><line x1="100" y1="100" x2="100" y2="50" stroke-width="4" stroke-linecap="round"/><polygon points="100,34 92,54 108,54"/></g>
+  <g class="hand tim" transform="rotate(${(h % 12) * 30} 100 100)"><line x1="100" y1="100" x2="100" y2="70" stroke-width="5" stroke-linecap="round"/><polygon points="100,54 91,74 109,74"/></g>
   <circle class="pivot" cx="100" cy="100" r="5"/></svg>`;
 
 function ritaVisare(){
@@ -991,40 +999,38 @@ function pekaren(e){
   let ang = Math.atan2(x, -y) * 180 / Math.PI;
   return { ang: ang < 0 ? ang + 360 : ang, r: Math.hypot(x, y) / (r.width / 2) * 100 };
 }
-/* Knapparna under klockan bestämmer vilken visare som flyttas – alltid den
-   valda, så det aldrig blir fel visare när man trycker där den andra står.
-   Den som inte är vald tonas ner. */
-let valdVisare = "tim";
-function valjVisare(v){
-  valdVisare = v;
-  el("handPick").querySelectorAll(".pick").forEach(b => b.classList.toggle("vald", b.dataset.visare === v));
-  clockSvg.classList.toggle("valj-tim", v === "tim");
-  clockSvg.classList.toggle("valj-min", v === "min");
+/* Visarna är egna enheter: man tar tag i en och drar runt den. Ett tryck vid
+   sidan av visarna gör ingenting. Indikatorn under klockan visar vad man håller i. */
+const NAMN = { tim:"timvisaren", min:"minutvisaren" };
+function visaGrepp(){
+  const s = el("clockStatus");
+  s.classList.toggle("haller", !!drar);
+  s.innerHTML = drar
+    ? `<span class="prick ${drar}"></span>Du håller i <b>&nbsp;${NAMN[drar]}</b>`
+    : "Ta tag i en visare och dra runt den";
+  el("handMin").classList.toggle("haller", drar === "min");
+  el("handTim").classList.toggle("haller", drar === "tim");
 }
-el("handPick").addEventListener("click", e => {
-  const b = e.target.closest("[data-visare]");
-  if(b && !klockLast) valjVisare(b.dataset.visare);
-});
 
 function flyttaVisare(p){
-  let bast = snapVinklar()[0];
-  snapVinklar().forEach(a => { if(avstand(a, p.ang) < avstand(bast, p.ang)) bast = a; });
+  const lagen = drar === "tim" ? timVinklar() : minutVinklar();
+  let bast = lagen[0];
+  lagen.forEach(a => { if(avstand(a, p.ang) < avstand(bast, p.ang)) bast = a; });
   if(drar === "tim") klockH = bast / 30 || 12; else klockM = bast / 6;
   klockRord = true;
-  clockSvg.classList.toggle("drar-tim", drar === "tim");
-  clockSvg.classList.toggle("drar-min", drar === "min");
   ritaVisare();
 }
 clockSvg.addEventListener("pointerdown", e => {
-  if(klockLast) return;
+  const hand = e.target.closest(".hand");                  // bara visarna går att ta i
+  if(klockLast || !hand) return;
   e.preventDefault();
-  const p = pekaren(e);
-  drar = valdVisare;
-  try{ clockSvg.setPointerCapture(e.pointerId); }catch{}
-  flyttaVisare(p);
+  drar = hand.classList.contains("tim") ? "tim" : "min";
+  try{ hand.setPointerCapture(e.pointerId); }catch{}
+  visaGrepp();
+  flyttaVisare(pekaren(e));
 });
 clockSvg.addEventListener("pointermove", e => { if(drar && !klockLast) flyttaVisare(pekaren(e)); });
-const slutaDra = () => { drar = null; clockSvg.classList.remove("drar-tim", "drar-min"); };
+const slutaDra = () => { drar = null; visaGrepp(); };
 clockSvg.addEventListener("pointerup", slutaDra);
 clockSvg.addEventListener("pointercancel", slutaDra);
 
@@ -1038,18 +1044,18 @@ const KLOCKFORMER = [
 function klockPar(l){
   const former = KLOCKFORMER.filter(f => !l.former || l.former.includes(f.id));
   const alla = [];
-  (l.snap || [12, 3, 6, 9]).forEach(h => former.forEach(f => alla.push({ h, m:f.m, q:f.text(h) })));
+  (l.timmar || TIMMAR).forEach(h => former.forEach(f => alla.push({ h, m:f.m, q:f.text(h) })));
   return shuffle(alla).slice(0, l.antal || 5).map(t => ({
     a:t.q, b:klockText(t.h, t.m), aAlt:[], bAlt:[], exakt:false, klocka:{ h:t.h, m:t.m }
   }));
 }
 /* Slumpat utgångsläge, men aldrig det rätta svaret. */
 function startlage(p){
-  const snap = snapLista();
-  const slump = () => snap[Math.random() * snap.length | 0];
+  const timmar = (L.timmar || TIMMAR), minuter = minutVinklar().map(a => a / 6);
+  const slump = a => a[Math.random() * a.length | 0];
   let h, m, n = 0;
   do {
-    h = slump(); m = (slump() % 12) * 5;
+    h = slump(timmar); m = slump(minuter);
   } while(++n < 30 && ((h === p.klocka.h && m === p.klocka.m)   // aldrig rätt svar från start
                        || (h % 12) * 30 === m * 6));           // och visarna ska inte ligga på varandra
   satKlocka(h, m);
@@ -1132,7 +1138,7 @@ function render(){
   if(p.klocka){
     clockSvg.classList.remove("last");
     el("clockWrap").classList.remove("last");
-    valjVisare("tim");
+    drar = null; visaGrepp();
     startlage(p);
     klockRord = false;
   }
