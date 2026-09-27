@@ -9,8 +9,8 @@
      titel  rubrik.
      till   sista dag, "ÅÅÅÅ-MM-DD". Valfritt. När dagen har passerat flyttas
             läxan ner under "Tidigare" – den går fortfarande att öva på.
-     typ    "glosor", "fragor", "plugga" eller "uppgift".
-            Exempel på alla fyra finns i README.md.
+     typ    "glosor", "fragor", "plugga", "klocka", "karta" eller "uppgift".
+            Exempel på alla finns i README.md.
 
    Läxor som inte längre behövs kan tas bort helt. Resultaten i adminvyn
    finns kvar ändå.
@@ -99,6 +99,29 @@ const LAXOR = [
     typ: "klocka",
     antal: 5,
     former: ["hel", "over", "halv", "i"]
+  },
+
+  /* ---- Karta: världsdelar, hav och floder på en världskarta ---------------
+     platser  vilka platser som ska övas. Utelämnad = alla. Det finns:
+                världsdelar: nordamerika, sydamerika, europa, asien, afrika,
+                             oceanien, antarktis
+                hav:         stilla-havet, atlanten, indiska-oceanen,
+                             norra-ishavet, antarktiska-oceanen
+                floder:      mississippi, amazonfloden, nilen, indus, chang-jiang
+     Man väljer själv mellan att peka ut platsen på kartan och att skriva
+     namnet på den plats som lyser gult (eller blandat).
+  --------------------------------------------------------------------------- */
+  {
+    id: "geografi-v40",
+    amne: "Geografi",
+    titel: "Världsdelar, hav och floder",
+    till: "2026-09-30",
+    typ: "karta",
+    platser: [
+      "nordamerika", "sydamerika", "europa", "asien", "afrika", "oceanien", "antarktis",
+      "stilla-havet", "atlanten", "indiska-oceanen", "norra-ishavet", "antarktiska-oceanen",
+      "mississippi", "amazonfloden", "nilen", "indus", "chang-jiang"
+    ]
   },
 
   /* ---- Plugga: text att läsa eller lyssna på + ett prov --------------------

@@ -302,7 +302,7 @@ function renderDetail(){
   el("overview").hidden = !quiz;
   el("hardCard").hidden = !quiz;
   el("roundsHead").textContent = quiz ? "Varje runda" : "Avbockat";
-  el("hardHead").textContent = l.typ === "glosor" ? "Ord som blir fel" : l.typ === "klocka" ? "Klockslag som blir fel" : "Frågor som blir fel";
+  el("hardHead").textContent = l.typ === "glosor" ? "Ord som blir fel" : l.typ === "klocka" ? "Klockslag som blir fel" : l.typ === "karta" ? "Platser som blir fel" : "Frågor som blir fel";
 
   if(!rs.length){
     el("hard").innerHTML = '<li class="empty">Inga rundor gjorda än.</li>';

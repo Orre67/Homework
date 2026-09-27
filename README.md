@@ -7,13 +7,14 @@ laxor.js            veckans läxor – den enda filen som ändras varje vecka
 index.html          appen som barnen använder (startsida, läxor, förhör)
 admin.html          resultatvyn, ligger på /admin
 api/results.js      sparar och hämtar rundor
+karta/              världskartan till läxtypen karta
 manifest.webmanifest + icon-*.png   gör att sidan kan läggas på hemskärmen som en app
 ```
 
 ## Lägga in veckans läxor
 
 Öppna `laxor.js`. Varje läxa är ett objekt i listan `LAXOR` med `id`, `amne`,
-`titel`, `till` (sista dag) och `typ`. Det finns fem typer:
+`titel`, `till` (sista dag) och `typ`. Det finns sex typer:
 
 **Glosor** – förhörs åt båda hållen, kan läsas upp.
 
@@ -137,6 +138,31 @@ Lättare start: `timmar: [12, 3, 6, 9]`. Nästa nivå: `minuter: [0,5,10,15,20,2
 
 I adminvyn listas bara de klockslag som faktiskt blivit fel, med vad hon ställde
 klockan på. Trycker man "Visa svar" sparas det som inget svar.
+
+**Karta** – världsdelar, hav och floder på en världskarta med berg och slätter.
+Man väljer mellan att *peka på kartan* (namnet visas, tryck där platsen ligger),
+*skriva namnet* på platsen som lyser gult, eller blandat. På läxsidan finns kartan
+att titta på: tryck på en plats eller i listan så visas namnet, eller "Visa alla namn".
+Nyp eller använd + för att zooma.
+
+```js
+{
+  id: "geografi-v40", amne: "Geografi", titel: "Världsdelar, hav och floder", till: "2026-09-30",
+  typ: "karta",
+  platser: ["europa", "asien", "atlanten", "nilen"]      // utelämnad = alla
+}
+```
+
+Platserna som finns: världsdelarna `nordamerika`, `sydamerika`, `europa`, `asien`,
+`afrika`, `oceanien`, `antarktis`; haven `stilla-havet`, `atlanten`, `indiska-oceanen`,
+`norra-ishavet`, `antarktiska-oceanen`; floderna `mississippi`, `amazonfloden`,
+`nilen`, `indus`, `chang-jiang`. Små stavfel godkänns men rätt stavning visas
+("Stavas Mississippi"), och vanliga andra namn går också bra (Ishavet, Amazonas, Yangtze).
+
+Kartan ligger i `karta/`: `varld.js` (konturerna) och `relief.webp` (färgerna), båda
+gjorda av `bygg_karta.py` från Natural Earth (public domain). Den laddas bara när en
+kartläxa öppnas. Nya platser (t.ex. fler floder) kräver att skriptet körs om och att
+platsen läggs till i `PLATSER` i index.html.
 
 **Uppgift** – något som ska göras och bockas av. `steg` och `lank` är valfria.
 

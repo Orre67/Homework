@@ -400,6 +400,42 @@
 
   footer{text-align:center;padding:8px 0 0}
 
+  /* ---------- karta ---------- */
+  .karta{position:relative;margin:0 -6px;border:2px solid var(--cobalt-deep);background:#14547c;overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+  .karta.zoomad{touch-action:none}
+  .karta svg{display:block;width:100%;height:auto;cursor:pointer}
+  .karta .sida{fill:#3f4a1c}
+  .karta .skugga{fill:#021a2c;opacity:.55}
+  .karta .kant{fill:none;stroke:rgba(255,255,240,.35);stroke-width:.5;vector-effect:non-scaling-stroke}
+  .karta .ural{fill:none;stroke:rgba(40,30,10,.55);stroke-width:1.2;stroke-dasharray:4 3;vector-effect:non-scaling-stroke}
+  .karta .omr path{fill:transparent}
+  .karta .flod{fill:none;stroke:#2378c8;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+  .karta .flod.kant2{stroke:#E8F4FF;stroke-width:3.6}
+  .karta .omr path.gul{fill:rgba(255,214,10,.55)}
+  .karta .hav path.gul{fill:rgba(255,226,90,.7)}
+  .karta .omr path.ratt{fill:rgba(14,160,120,.6)}
+  .karta .omr path.fel{fill:rgba(220,50,35,.5)}
+  .karta .flod.gul{stroke:#FFD60A;stroke-width:5}
+  .karta .flod.ratt{stroke:#0EA078;stroke-width:5}
+  .karta .flod.fel{stroke:#DC3223;stroke-width:5}
+  .karta .ring{fill:none;stroke:#FFD60A;stroke-width:3;vector-effect:non-scaling-stroke;animation:ring 1.4s ease-out infinite}
+  .karta .ring.ratt{stroke:#0EA078}.karta .ring.fel{stroke:#DC3223}
+  @keyframes ring{from{opacity:1;stroke-width:4}to{opacity:0;stroke-width:1}}
+  .karta .etikett rect{fill:rgba(255,255,255,.92);stroke:rgba(11,27,51,.35)}
+  .karta .etikett text{font-family:var(--body);font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+  .karta .etikett.ratt rect{fill:#E4F3F0;stroke:var(--verde)}
+  .karta .etikett.fel rect{fill:#FBE9E6;stroke:var(--rojo)}
+  .karta .etikett.gul rect{fill:#FFF3B0;stroke:#C9950A}
+  .zoomknappar{position:absolute;right:6px;top:6px;display:flex;flex-direction:column;gap:6px}
+  .zoomknappar button{width:38px;height:38px;border-radius:50%;border:2px solid var(--cobalt-deep);background:rgba(251,246,234,.92);font:700 1.25rem/1 var(--body);color:var(--cobalt-deep);cursor:pointer;padding:0}
+  .zoomknappar button[hidden]{display:none}
+  .kart-wrap{margin:14px -12px 0}
+  .kart-wrap[hidden]{display:none}
+  .kart-wrap + .choices{margin-top:0}
+  .karthint{text-align:center;margin:8px 0 0}
+  .wordlist li[data-plats]{cursor:pointer}
+  .wordlist li.vald{background:#FFF3B0;margin:0 -8px;padding-left:8px;padding-right:8px}
+
   @media (prefers-reduced-motion: reduce){
     *{animation:none !important;transition:none !important}
   }
@@ -460,6 +496,11 @@
       <div class="cardhead">
         <h2 id="wordsHead">Orden</h2>
         <button class="btn small ghost" id="playAllBtn" hidden>Spela upp alla</button>
+        <button class="btn small ghost" id="namnBtn" type="button" hidden>Visa alla namn</button>
+      </div>
+      <div id="kartHem" hidden>
+        <div class="kartplats"></div>
+        <p class="hint karthint">Tryck på kartan eller i listan så ser du vad platsen heter. Nyp eller använd + för att zooma.</p>
       </div>
       <ul class="wordlist" id="wordList"></ul>
       <p class="hint voiceHint" id="voiceHint" hidden></p>
@@ -534,6 +575,7 @@
       <p class="clock-status" id="clockStatus"></p>
     </div>
 
+    <div class="kart-wrap" id="kartWrap" hidden><div class="kartplats"></div></div>
     <div class="choices" id="choices" hidden></div>
     <div class="keys" id="keys" hidden></div>
     <input type="text" id="answer" placeholder="Skriv svaret" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
@@ -610,13 +652,14 @@ const SUBJECT_COLOR = {
   biologi:"var(--terra)", kemi:"var(--terra)", fysik:"var(--terra)", religion:"var(--terra)", samhallskunskap:"var(--terra)"
 };
 const subjectColor = amne => SUBJECT_COLOR[norm(amne)] || "var(--cobalt)";
-const isQuiz = l => l.typ === "glosor" || l.typ === "fragor" || l.typ === "plugga" || l.typ === "klocka";
+const isQuiz = l => ["glosor", "fragor", "plugga", "klocka", "karta"].includes(l.typ);
 
 function typLabel(l){
   if(l.typ === "glosor") return `Glosor · ${l.glosor.length} ord`;
   if(l.typ === "fragor") return `Frågor · ${l.fragor.length} st`;
   if(l.typ === "plugga") return `Läsa + prov · ${(l.fragor || []).length} frågor`;
   if(l.typ === "klocka") return `Klockan · ${l.antal || 5} att ställa`;
+  if(l.typ === "karta") return `Karta · ${kartPlatser(l).length} platser`;
   return l.steg && l.steg.length ? `Uppgift · ${l.steg.length} delar` : "Uppgift";
 }
 /* Sidorna i ett förhör: a = det som visas i "fram"-läget, b = svaret. */
@@ -632,6 +675,12 @@ function pairsOf(l){
     }));
   }
   if(l.typ === "klocka") return klockPar(l);
+  if(l.typ === "karta"){
+    return kartPlatser(l).map(k => {
+      const P = PLATSER[k];
+      return { a:P.namn, b:P.namn, aAlt:[], bAlt:P.alt || [], exakt:false, karta:true, k, slag:P.slag };
+    });
+  }
   if(l.typ === "fragor" || l.typ === "plugga"){
     /* Med fel-lista blir frågan flerval: val = rätt svar + felen (blandas vid visning). */
     return (l.fragor || []).map(f => ({
@@ -821,13 +870,18 @@ function renderQuizIntro(l){
   const [A, B] = labels(l);
   const glosor = l.typ === "glosor";
   const klocka = l.typ === "klocka";
+  const karta = l.typ === "karta";
   el("wordsCard").hidden = klocka;                 // klockslagen lottas fram, ingen lista
   el("startBtn").textContent = klocka ? "Starta" : "Starta förhöret";
-  el("klockLead").hidden = !klocka;
+  el("startBtn").disabled = false;
+  el("klockLead").hidden = !klocka && !karta;
+  el("klockLead").textContent = karta
+    ? "Peka ut platserna på kartan, eller skriv namnet på den plats som lyser gult."
+    : "Du får en tid i rutan. Dra visarna så att klockan visar den tiden.";
   const tts = glosor && TTS;
-  el("modes").hidden = !glosor;
-  el("modeFram").textContent = `${A} → ${B}`;
-  el("modeBak").textContent  = `${B} → ${A}`;
+  el("modes").hidden = !glosor && !karta;
+  el("modeFram").textContent = karta ? "Peka på kartan" : `${A} → ${B}`;
+  el("modeBak").textContent  = karta ? "Skriv namnet" : `${B} → ${A}`;
   el("modeLyssna").hidden = !tts;
   /* Varje läxa minns sitt eget läge. Första gången gäller läxans "riktning"
      (t.ex. "bak" = Svenska → Spanska), annars det man senast körde. */
@@ -841,12 +895,16 @@ function renderQuizIntro(l){
     ? `Senast <b>${rs[0].right}/${rs[0].total}</b> · bäst <b>${Math.max(...rs.map(r => r.right))}/${rs[0].total}</b> · ${rs.length} ${rs.length === 1 ? "gång" : "gånger"}`
     : "Inte kört än.";
 
-  el("wordsHead").textContent = glosor ? "Orden" : "Frågorna";
+  el("wordsHead").textContent = glosor ? "Orden" : karta ? "Kartan" : "Frågorna";
   el("playAllBtn").hidden = !tts;
   el("playAllBtn").textContent = "Spela upp alla";
-  el("wordList").innerHTML = PAIRS.map(p =>
+  el("kartHem").hidden = el("namnBtn").hidden = !karta;
+  el("wordList").innerHTML = karta
+    ? PAIRS.map(p => `<li data-plats="${p.k}"><span class="a">${esc(p.a)}</span><span class="b">${SLAG[p.slag].ett}</span></li>`).join("")
+    : PAIRS.map(p =>
     `<li>${tts ? sayHtml(p.a) : ""}<span class="a">${esc(p.a)}</span><span class="b">${esc(p.b)}</span></li>`
   ).join("");
+  if(karta) renderKartHem(l);
   el("voiceHint").hidden = true;
   if(tts) pickVoice(l.sprak);
 }
@@ -1064,6 +1122,359 @@ function startlage(p){
   satKlocka(h, m);
 }
 
+/* ---------- Karta: världsdelar, hav och floder ----------
+   Kartan ligger i karta/varld.js (konturerna) och karta/relief.webp (färgerna
+   med berg och slätter). Den laddas först när en kartläxa öppnas.
+   pos = [longitud, latitud] där namnet skrivs; för floderna flyttas punkten
+   till närmaste ställe på floden. */
+const PLATSER = {
+  "nordamerika":         { namn:"Nordamerika", slag:"land", pos:[-100, 46] },
+  "sydamerika":          { namn:"Sydamerika", slag:"land", pos:[-60, -10] },
+  "europa":              { namn:"Europa", slag:"land", pos:[22, 52] },
+  "asien":               { namn:"Asien", slag:"land", pos:[92, 52] },
+  "afrika":              { namn:"Afrika", slag:"land", pos:[20, 6] },
+  "oceanien":            { namn:"Oceanien", slag:"land", pos:[134, -25] },
+  "antarktis":           { namn:"Antarktis", slag:"land", pos:[40, -71.5] },
+  "stilla-havet":        { namn:"Stilla havet", slag:"hav", pos:[-135, 2], alt:["Stillahavet", "Stilla oceanen"] },
+  "atlanten":            { namn:"Atlanten", slag:"hav", pos:[-42, 30], alt:["Atlantiska oceanen", "Atlanthavet"] },
+  "indiska-oceanen":     { namn:"Indiska oceanen", slag:"hav", pos:[78, -18], alt:["Indiska havet"] },
+  "norra-ishavet":       { namn:"Norra ishavet", slag:"hav", pos:[0, 79], alt:["Ishavet", "Arktiska oceanen"] },
+  "antarktiska-oceanen": { namn:"Antarktiska oceanen", slag:"hav", pos:[-30, -63], alt:["Södra ishavet", "Södra oceanen"] },
+  "mississippi":         { namn:"Mississippi", slag:"flod", pos:[-91, 33], alt:["Mississippifloden"] },
+  "amazonfloden":        { namn:"Amazonfloden", slag:"flod", pos:[-60, -3], alt:["Amazonas", "Amazon"] },
+  "nilen":               { namn:"Nilen", slag:"flod", pos:[32, 22], alt:["Nil", "Nilfloden"] },
+  "indus":               { namn:"Indus", slag:"flod", pos:[70, 28], alt:["Indusfloden"] },
+  "chang-jiang":         { namn:"Chang Jiang", slag:"flod", pos:[112, 30], alt:["Changjiang", "Yangtze", "Jangtse", "Jangtsekiang"] }
+};
+const SLAG = {
+  land:{ ett:"Världsdel", var:"Var ligger världsdelen?", vilken:"Vilken världsdel lyser gult?" },
+  hav: { ett:"Hav",       var:"Var ligger havet?",       vilken:"Vilket hav lyser gult?" },
+  flod:{ ett:"Flod",      var:"Var ligger floden?",      vilken:"Vilken flod lyser gult?" }
+};
+const kartPlatser = l => (l.platser || Object.keys(PLATSER)).filter(k => PLATSER[k]);
+const platsFranNamn = namn => Object.keys(PLATSER).find(k => PLATSER[k].namn === namn);
+const FLOD_PX = 22;                 // så nära floden (i skärmpixlar) måste man trycka
+
+let kartLaddas = null;
+function laddaKarta(){
+  if(!kartLaddas) kartLaddas = new Promise((ok, fel) => {
+    const s = document.createElement("script");
+    s.src = "karta/varld.js";
+    s.onload = ok;
+    s.onerror = () => { kartLaddas = null; s.remove(); fel(); };
+    document.head.appendChild(s);
+  });
+  return kartLaddas;
+}
+
+/* Miller-projektionen, samma som bygg_karta.py använder. */
+const miller = lat => 1.25 * Math.log(Math.tan(Math.PI / 4 + 0.4 * lat * Math.PI / 180)) * 180 / Math.PI;
+const kartXY = ([lon, lat]) => {
+  const V = window.VARLD;
+  return [(lon + 180) * V.w / 360, (miller(V.proj.norr) - miller(lat)) * V.w / 360];
+};
+/* "M1 2L3 4Z M..." → lista med punktlistor */
+const ringar = d => d.split("M").filter(Boolean).map(r => r.replace("Z", "").split("L").map(p => p.trim().split(" ").map(Number)));
+
+function inuti(rs, x, y){          // jämn-udda-regeln över alla ringar
+  let in_ = false;
+  for(const r of rs){
+    for(let a = 0, b = r.length - 1; a < r.length; b = a++){
+      const [xa, ya] = r[a], [xb, yb] = r[b];
+      if((ya > y) !== (yb > y) && x < (xb - xa) * (y - ya) / (yb - ya) + xa) in_ = !in_;
+    }
+  }
+  return in_;
+}
+function avstandLinje(ls, x, y){
+  let bast = Infinity;
+  for(const l of ls) for(let n = 1; n < l.length; n++){
+    const [x1, y1] = l[n - 1], [x2, y2] = l[n], dx = x2 - x1, dy = y2 - y1;
+    const t = dx || dy ? Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / (dx * dx + dy * dy))) : 0;
+    bast = Math.min(bast, Math.hypot(x - x1 - t * dx, y - y1 - t * dy));
+  }
+  return bast;
+}
+
+/* Kartan byggs en gång och flyttas sedan mellan läxsidan och förhöret. */
+let K = null;
+function byggKarta(){
+  const V = window.VARLD;
+  const wrap = document.createElement("div");
+  wrap.className = "karta";
+  wrap.innerHTML = `<svg viewBox="0 0 ${V.w} ${V.h}" role="img" aria-label="Världskarta">
+    <defs>
+      <radialGradient id="kHav" cx="30%" cy="32%" r="85%">
+        <stop offset="0" stop-color="#d6f2fb"/><stop offset=".3" stop-color="#7cc1e0"/>
+        <stop offset=".7" stop-color="#2d7cab"/><stop offset="1" stop-color="#114c75"/>
+      </radialGradient>
+      <linearGradient id="kSida" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#5b6a26"/><stop offset="1" stop-color="#2e3812"/>
+      </linearGradient>
+      <path id="kLand" d="${Object.values(V.land).join("")}"/>
+      <clipPath id="kKlipp"><use href="#kLand"/></clipPath>
+      <filter id="kSuddig" x="-2%" y="-2%" width="104%" height="106%"><feGaussianBlur stdDeviation="2.4"/></filter>
+    </defs>
+    <rect width="${V.w}" height="${V.h}" fill="url(#kHav)"/>
+    <g class="omr hav">${Object.entries(V.hav).map(([k, d]) => `<path data-k="${k}" d="${d}"/>`).join("")}</g>
+    <use href="#kLand" class="skugga" transform="translate(2.6 4.2)" filter="url(#kSuddig)"/>
+    <use href="#kLand" class="sida" transform="translate(.9 2.7)"/>
+    <use href="#kLand" class="sida" transform="translate(.6 1.8)"/>
+    <use href="#kLand" class="sida" transform="translate(.3 .9)" fill="url(#kSida)"/>
+    <image href="karta/relief.webp" width="${V.w}" height="${V.h}" preserveAspectRatio="none" clip-path="url(#kKlipp)"/>
+    <use href="#kLand" class="kant"/>
+    <path class="ural" d="${V.ural}"/>
+    <g class="omr land">${Object.entries(V.land).map(([k, d]) => `<path data-k="${k}" d="${d}"/>`).join("")}</g>
+    <g>${Object.entries(V.floder).map(([k, d]) => `<path class="flod kant2" d="${d}"/><path class="flod" data-k="${k}" d="${d}"/>`).join("")}</g>
+    <g class="markering"></g>
+    <g class="etiketter"></g>
+  </svg>
+  <div class="zoomknappar">
+    <button type="button" data-zoom="in" aria-label="Zooma in">+</button>
+    <button type="button" data-zoom="ut" aria-label="Zooma ut">−</button>
+    <button type="button" data-zoom="hel" aria-label="Visa hela kartan" hidden>⤢</button>
+  </div>`;
+
+  const omr = o => Object.fromEntries(Object.entries(o).map(([k, d]) => [k, ringar(d)]));
+  K = {
+    wrap, svg:wrap.querySelector("svg"), vb:{ x:0, y:0, w:V.w, h:V.h },
+    land:omr(V.land), hav:omr(V.hav), floder:omr(V.floder),
+    pos:{}, markerade:[], allaNamn:false, onTap:null, platser:[]
+  };
+  for(const [k, P] of Object.entries(PLATSER)){
+    let [x, y] = kartXY(P.pos);
+    if(P.slag === "flod" && K.floder[k]){          // närmaste punkt på floden
+      let bast = Infinity;
+      K.floder[k].flat().forEach(([px, py]) => { const d = Math.hypot(px - x, py - y); if(d < bast){ bast = d; x = px; y = py; } });
+    }
+    K.pos[k] = [x, y];
+  }
+  kartGester();
+  window.addEventListener("resize", () => K.wrap.isConnected && ritaOverlay());
+}
+
+function monteraKarta(plats, platser){
+  if(!K) byggKarta();
+  plats.appendChild(K.wrap);
+  K.platser = platser;
+  K.vb = { x:0, y:0, w:window.VARLD.w, h:window.VARLD.h };
+  K.onTap = null;
+  kartRensa();
+  kartVy();
+}
+
+const pxPerEnhet = () => K.svg.getBoundingClientRect().width / K.vb.w || 0.35;
+
+function kartVy(){
+  const V = window.VARLD, v = K.vb;
+  v.w = Math.min(V.w, Math.max(V.w / 10, v.w)); v.h = v.w * V.h / V.w;
+  v.x = Math.min(Math.max(v.x, 0), V.w - v.w);
+  v.y = Math.min(Math.max(v.y, 0), V.h - v.h);
+  K.svg.setAttribute("viewBox", `${v.x} ${v.y} ${v.w} ${v.h}`);
+  const zoomad = v.w < V.w - 1;
+  K.wrap.classList.toggle("zoomad", zoomad);
+  K.wrap.querySelector('[data-zoom="hel"]').hidden = !zoomad;
+  K.wrap.querySelector('[data-zoom="ut"]').hidden = !zoomad;
+  ritaOverlay();
+}
+function zooma(f, cx, cy){
+  const v = K.vb;
+  if(cx === undefined){ cx = v.x + v.w / 2; cy = v.y + v.h / 2; }
+  const ax = (cx - v.x) / v.w, ay = (cy - v.y) / v.h;
+  const w = Math.min(window.VARLD.w, Math.max(window.VARLD.w / 10, v.w / f)), h = w * v.h / v.w;
+  K.vb = { x:cx - ax * w, y:cy - ay * h, w, h };
+  kartVy();
+}
+function tillKarta(cx, cy){
+  const r = K.svg.getBoundingClientRect();
+  return [K.vb.x + (cx - r.left) / r.width * K.vb.w, K.vb.y + (cy - r.top) / r.height * K.vb.h];
+}
+
+/* Tryck = svar/visa namn. Dra = flytta (när man zoomat in). Två fingrar = zooma. */
+function kartGester(){
+  const svg = K.svg, pek = new Map();
+  let g = null;
+  const mitt = () => { const p = [...pek.values()]; return [(p[0].x + p[1].x) / 2, (p[0].y + p[1].y) / 2]; };
+  const avst = () => { const p = [...pek.values()]; return Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) || 1; };
+
+  svg.addEventListener("pointerdown", e => {
+    try{ svg.setPointerCapture(e.pointerId); }catch{}
+    pek.set(e.pointerId, { x:e.clientX, y:e.clientY });
+    if(pek.size === 1) g = { x0:e.clientX, y0:e.clientY, t:Date.now(), flytt:false, vb:{ ...K.vb } };
+    else if(pek.size === 2){
+      const [mx, my] = mitt();
+      g = { ...g, flytt:true, nyp:{ d:avst(), vb:{ ...K.vb }, punkt:tillKarta(mx, my) } };
+    }
+  });
+  svg.addEventListener("pointermove", e => {
+    if(!pek.has(e.pointerId) || !g) return;
+    pek.set(e.pointerId, { x:e.clientX, y:e.clientY });
+    const r = svg.getBoundingClientRect();
+    if(pek.size >= 2 && g.nyp){
+      const n = g.nyp, [mx, my] = mitt();
+      const w = Math.min(window.VARLD.w, Math.max(window.VARLD.w / 10, n.vb.w * n.d / avst()));
+      const h = w * n.vb.h / n.vb.w;
+      K.vb = { x:n.punkt[0] - (mx - r.left) / r.width * w, y:n.punkt[1] - (my - r.top) / r.height * h, w, h };
+      kartVy();
+      return;
+    }
+    const dx = e.clientX - g.x0, dy = e.clientY - g.y0;
+    if(Math.hypot(dx, dy) > 8) g.flytt = true;
+    if(g.flytt && K.wrap.classList.contains("zoomad")){
+      K.vb = { ...g.vb, x:g.vb.x - dx / r.width * g.vb.w, y:g.vb.y - dy / r.height * g.vb.h };
+      kartVy();
+    }
+  });
+  const slut = e => {
+    if(!pek.has(e.pointerId)) return;
+    pek.delete(e.pointerId);
+    if(pek.size === 1){                               // ett finger kvar efter nypet: fortsätt dra
+      const [p] = pek.values();
+      g = { x0:p.x, y0:p.y, t:0, flytt:true, vb:{ ...K.vb } };
+      return;
+    }
+    if(!pek.size && g && !g.flytt && e.type === "pointerup" && Date.now() - g.t < 800 && K.onTap){
+      const [x, y] = tillKarta(e.clientX, e.clientY);
+      K.onTap(kartTraff(x, y));
+    }
+    if(!pek.size) g = null;
+  };
+  svg.addEventListener("pointerup", slut);
+  svg.addEventListener("pointercancel", slut);
+  svg.addEventListener("wheel", e => {
+    e.preventDefault();
+    const [x, y] = tillKarta(e.clientX, e.clientY);
+    zooma(e.deltaY < 0 ? 1.25 : 0.8, x, y);
+  }, { passive:false });
+  K.wrap.addEventListener("gesturestart", e => e.preventDefault());   // Safari: zooma kartan, inte sidan
+  K.wrap.querySelector(".zoomknappar").addEventListener("click", e => {
+    const b = e.target.closest("[data-zoom]"); if(!b) return;
+    if(b.dataset.zoom === "hel"){ K.vb = { x:0, y:0, w:window.VARLD.w, h:window.VARLD.h }; kartVy(); }
+    else zooma(b.dataset.zoom === "in" ? 1.8 : 1 / 1.8);
+  });
+}
+
+/* Vad ligger där man tryckte? Bara platserna i läxan räknas. */
+function kartTraff(x, y){
+  const med = k => K.platser.includes(k);
+  let flod = null, bast = Infinity;
+  for(const [k, ls] of Object.entries(K.floder)){
+    if(!med(k)) continue;
+    const d = avstandLinje(ls, x, y);
+    if(d < bast){ bast = d; flod = k; }
+  }
+  const i_ = o => Object.keys(o).find(k => med(k) && inuti(o[k], x, y)) || null;
+  return { flod, flodPx:bast * pxPerEnhet(), land:i_(K.land), hav:i_(K.hav) };
+}
+/* Det man pekade på. Frågar man efter en flod räknas floden först. */
+function kartVal(t, forstFlod){
+  const nara = t.flodPx <= FLOD_PX ? t.flod : null;
+  return (forstFlod ? nara || t.land || t.hav : t.land || t.hav || nara) || null;
+}
+
+function kartRensa(){
+  K.markerade = [];
+  ritaOverlay();
+}
+function kartMarkera(k, klass, namn = true){
+  K.markerade = K.markerade.filter(m => m.k !== k);
+  K.markerade.push({ k, klass, namn });
+  ritaOverlay();
+}
+
+/* Markeringar, ringar och namnlappar ritas om vid zoom så att de behåller
+   sin storlek på skärmen. */
+function ritaOverlay(){
+  if(!K) return;
+  const ppu = pxPerEnhet(), fs = 11.5 / ppu;
+  K.svg.querySelectorAll("[data-k]").forEach(e => e.classList.remove("gul", "ratt", "fel"));
+  let ring = "", lapp = "";
+  const lappar = new Map();
+  if(K.allaNamn) K.platser.forEach(k => lappar.set(k, ""));
+  K.markerade.forEach(m => {
+    K.svg.querySelectorAll(`[data-k="${m.k}"]`).forEach(e => e.classList.add(m.klass));
+    if(PLATSER[m.k].slag === "flod"){
+      const [x, y] = K.pos[m.k];
+      ring += `<circle class="ring ${m.klass}" cx="${x}" cy="${y}" r="${14 / ppu}"/>`;
+    }
+    if(m.namn) lappar.set(m.k, m.klass);
+  });
+  lappar.forEach((klass, k) => {
+    const P = PLATSER[k];
+    let [x, y] = K.pos[k];
+    if(P.slag === "flod") y -= 20 / ppu;             // lappen ovanför floden, inte på den
+    const w = P.namn.length * fs * 0.56 + fs, h = fs * 1.6;
+    lapp += `<g class="etikett ${klass}"><rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="${h / 2}" stroke-width="${1 / ppu}"/>
+      <text x="${x}" y="${y}" font-size="${fs}">${esc(P.namn)}</text></g>`;
+  });
+  K.svg.querySelector(".markering").innerHTML = ring;
+  K.svg.querySelector(".etiketter").innerHTML = lapp;
+}
+
+/* Stavfel godkänns med en påminnelse: ett fel i korta namn, två i långa. */
+function levenshtein(a, b){
+  let rad = Array.from({ length:b.length + 1 }, (_, n) => n);
+  for(let x = 1; x <= a.length; x++){
+    const ny = [x];
+    for(let y = 1; y <= b.length; y++)
+      ny[y] = Math.min(rad[y] + 1, ny[y - 1] + 1, rad[y - 1] + (a[x - 1] === b[y - 1] ? 0 : 1));
+    rad = ny;
+  }
+  return rad[b.length];
+}
+const nastanRatt = (svar, ratt) => svar.length > 2 && levenshtein(svar, ratt) <= (ratt.length >= 8 ? 2 : 1);
+
+/* Läxsidan: kartan att titta på, tryck för att se namnen. */
+function visaPlats(k){
+  kartRensa();
+  if(k) kartMarkera(k, "gul");
+  el("wordList").querySelectorAll("[data-plats]").forEach(li => li.classList.toggle("vald", li.dataset.plats === k));
+}
+function renderKartHem(l){
+  const plats = el("kartHem").querySelector(".kartplats");
+  el("startBtn").disabled = !window.VARLD;
+  laddaKarta().then(() => {
+    el("startBtn").disabled = false;
+    if(L !== l || el("laxa").hidden) return;
+    monteraKarta(plats, kartPlatser(l));
+    K.allaNamn = false;
+    el("namnBtn").textContent = "Visa alla namn";
+    K.onTap = t => visaPlats(kartVal(t, false));
+    requestAnimationFrame(ritaOverlay);
+  }).catch(() => {
+    plats.innerHTML = '<p class="hint">Kartan kunde inte laddas. Kolla internet och ladda om sidan.</p>';
+  });
+}
+el("namnBtn").onclick = () => {
+  if(!K) return;
+  K.allaNamn = !K.allaNamn;
+  el("namnBtn").textContent = K.allaNamn ? "Dölj namnen" : "Visa alla namn";
+  ritaOverlay();
+};
+el("wordList").addEventListener("click", e => {
+  const li = e.target.closest("[data-plats]");
+  if(li && K) visaPlats(li.classList.contains("vald") ? null : li.dataset.plats);
+});
+
+/* Förhöret: "fram" = peka ut platsen, "bak" = skriv namnet på den gula. */
+function kartFraga(p){
+  monteraKarta(el("kartWrap").firstElementChild, kartPlatser(L));
+  K.allaNamn = false;
+  if(p.dir === "bak") kartMarkera(p.k, "gul", false);
+  K.onTap = p.dir === "fram" ? t => {
+    if(answered) return;
+    const k = kartVal(t, p.slag === "flod");
+    if(k) check(false, PLATSER[k].namn);
+  } : null;
+  requestAnimationFrame(ritaOverlay);
+}
+function kartFacit(p, given, correct){
+  kartRensa();
+  const k = platsFranNamn(given);
+  if(p.dir === "fram" && !correct && k && k !== p.k) kartMarkera(k, "fel");
+  kartMarkera(p.k, "ratt");
+}
+
 /* Specialtecken: knappar som skriver tecknet där markören står, så att man
    slipper byta till ett spanskt tangentbord på mobilen. */
 const SPECIALTECKEN = {
@@ -1129,8 +1540,17 @@ function render(){
   wordEl.classList.toggle("long", shown.length > 18 && !p.val);
   wordEl.classList.toggle("fraga", !!p.val);
   wordEl.classList.remove("anim"); void wordEl.offsetWidth; wordEl.classList.add("anim");
+  wordEl.hidden = false;
+  checkBtn.hidden = false;
+  el("kartWrap").hidden = !p.karta;
+  if(p.karta){
+    el("promptLang").textContent = p.dir === "fram" ? SLAG[p.slag].var : SLAG[p.slag].vilken;
+    wordEl.hidden = p.dir === "bak";                    // skriv: bara den gula platsen visas
+    kartFraga(p);
+  }
   input.value = ""; input.classList.remove("locked");
-  input.placeholder = L.typ === "glosor" ? `Svara på ${(p.dir === "fram" ? B : A).toLowerCase()}` : "Skriv svaret";
+  input.placeholder = L.typ === "glosor" ? `Svara på ${(p.dir === "fram" ? B : A).toLowerCase()}`
+    : p.karta ? "Skriv namnet" : "Skriv svaret";
   feedback.innerHTML = "";
   checkBtn.textContent = "Rätta";
   revealBtn.hidden = false;
@@ -1148,9 +1568,10 @@ function render(){
 
   /* Flerval: knappar i stället för skrivfält, Nästa-knappen visas först när man svarat. */
   input.hidden = el("quizRow").hidden = el("choices").hidden = false;
-  if(p.klocka){
-    input.hidden = true;
+  if(p.klocka || p.karta && p.dir === "fram"){
+    input.hidden = true;                                // klockan: dra visarna, kartan: tryck
     el("choices").hidden = true;
+    checkBtn.hidden = !!p.karta;
   }else if(p.val){
     input.hidden = el("quizRow").hidden = true;
     el("choices").innerHTML = shuffle(p.val.slice()).map(o =>
@@ -1163,7 +1584,7 @@ function render(){
   el("sayRow").hidden = !(TTS && (L.typ === "glosor" ? p.dir === "fram" : L.typ === "plugga"));
   renderKeys(L.typ === "glosor" && p.dir === "bak" && !p.val);   // svaret skrivs på språket
   paintMosaic();
-  if(p.val || p.klocka) input.blur(); else input.focus();
+  if(p.val || p.klocka || p.karta && p.dir === "fram") input.blur(); else input.focus();
   if(lyssna) speak(p.a);
 }
 
@@ -1176,6 +1597,7 @@ function accepted(p){
 }
 function isCorrect(p, given){
   const n = p.exakt ? normExakt : norm;
+  if(p.karta && p.dir === "bak") return accepted(p).some(a => norm(a) === norm(given) || nastanRatt(norm(given), norm(a)));
   return accepted(p).map(n).includes(n(given));
 }
 
@@ -1188,7 +1610,7 @@ function check(revealed, picked){
   const correct = !revealed && given !== "" && isCorrect(p, given);
   const facit = p.dir === "fram" ? p.b : p.a;
 
-  results[i] = { q:p.a, a:p.b, dir:p.dir, correct, given };
+  results[i] = { q:p.a, a:p.karta ? SLAG[p.slag].ett : p.b, dir:p.dir, correct, given };
   if(mode === "lyssna") wordEl.textContent = p.a;
   answered = true;
   input.classList.add("locked");
@@ -1205,6 +1627,19 @@ function check(revealed, picked){
     });
     el("quizRow").hidden = false;
     feedback.innerHTML = correct ? '<span class="ok">Rätt!</span>' : '<span class="no">Fel</span><div class="hint">Rätt svar är grönmarkerat.</div>';
+    paintMosaic();
+    return;
+  }
+
+  if(p.karta){
+    kartFacit(p, given, correct);
+    const stav = correct && p.dir === "bak" && !accepted(p).some(a => norm(a) === norm(given));
+    feedback.innerHTML = correct
+      ? `<span class="ok">Rätt!</span><div class="hint">${stav ? `Stavas <b>${esc(p.b)}</b>` : `Det där är ${esc(p.b)}.`}</div>`
+      : revealed ? `<span class="no">Rätt svar</span><div><b>${esc(p.b)}</b></div>${p.dir === "fram" ? '<div class="hint">Den är grön på kartan.</div>' : ""}`
+      : p.dir === "fram" ? `<span class="no">Fel</span><div class="hint">Du tryckte på ${esc(given)}. ${esc(p.b)} är grön på kartan.</div>`
+      : `<span class="no">Fel</span><div><b>${esc(p.b)}</b></div>`;
+    checkBtn.hidden = false;
     paintMosaic();
     return;
   }
@@ -1253,7 +1688,7 @@ function finish(){
   el("review").classList.toggle("stacked", fragor);
   el("review").innerHTML = results.map(r =>
     `<li class="${r.correct ? "" : "miss"}"><span class="a">${tts ? sayHtml(r.q) : ""}<span>${esc(r.q)}</span></span><span class="b">${esc(r.a)}</span>${
-      fragor && !r.correct && r.given ? `<span class="given">Du svarade: ${esc(r.given)}</span>` : ""}</li>`
+      fragor && !r.correct && r.given ? `<span class="given">${L.typ === "karta" && r.dir === "fram" ? "Du tryckte på" : "Du svarade"}: ${esc(r.given)}</span>` : ""}</li>`
   ).join("");
 
   const misses = results.filter(r => !r.correct);
@@ -1306,7 +1741,7 @@ el("changeName").onclick = changeName;
 document.querySelectorAll(".changeName").forEach(b => b.onclick = changeName);
 
 el("startBtn").onclick = () => {
-  mode = L.typ === "glosor" ? document.querySelector("input[name=mode]:checked").value : "fram";
+  mode = L.typ === "glosor" || L.typ === "karta" ? document.querySelector("input[name=mode]:checked").value : "fram";
   store.set("laxor:mode", mode);
   store.set("laxor:mode:" + L.id, mode);
   startQuiz(PAIRS);
@@ -1343,7 +1778,7 @@ document.addEventListener("click", e => {
    svarsfältet, och Enter/"Gå" rättar respektive går vidare. */
 [checkBtn, revealBtn, el("sayBtn")].forEach(b => b.addEventListener("mousedown", e => e.preventDefault()));
 input.addEventListener("keydown", e => {
-  if(e.key === "Enter"){ e.preventDefault(); answered ? next() : check(false); }
+  if(e.key === "Enter"){ e.preventDefault(); e.stopPropagation(); answered ? next() : check(false); }
   else if(answered) e.preventDefault();
 });
 input.addEventListener("beforeinput", e => { if(answered) e.preventDefault(); });
@@ -1354,6 +1789,7 @@ document.addEventListener("keydown", e => {
     if(e.key.length === 1 && b){ e.preventDefault(); b.click(); }
     return;
   }
+  if(queue[i] && queue[i].karta && queue[i].dir === "fram" && !answered) return;   // svaret är ett tryck på kartan
   if(e.key === "Enter" && document.activeElement !== input){
     e.preventDefault(); answered ? next() : check(false);
   }
