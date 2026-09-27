@@ -434,6 +434,13 @@
   .kart-wrap + .choices{margin-top:0}
   .karthint{text-align:center;margin:8px 0 0}
   .wordlist li[data-plats]{cursor:pointer}
+  .kartlage #wordsCard{order:-1}
+  .urval{display:flex;gap:6px;margin:0 0 12px}
+  .urval[hidden]{display:none}
+  .urval button{flex:1;min-height:40px;padding:4px 6px;border:2px solid var(--cobalt);background:#fff;color:var(--cobalt);
+    font:600 .88rem/1.1 var(--body);cursor:pointer}
+  .urval button[aria-pressed="true"]{background:var(--cobalt);color:#fff}
+  .urval small{display:block;font-size:.72rem;opacity:.8;font-weight:500}
   .wordlist li.vald{background:#FFF3B0;margin:0 -8px;padding-left:8px;padding-right:8px}
 
   @media (prefers-reduced-motion: reduce){
@@ -498,6 +505,7 @@
         <button class="btn small ghost" id="playAllBtn" hidden>Spela upp alla</button>
         <button class="btn small ghost" id="namnBtn" type="button" hidden>Visa alla namn</button>
       </div>
+      <div class="urval" id="urval" hidden role="group" aria-label="Visa och öva på"></div>
       <div id="kartHem" hidden>
         <div class="kartplats"></div>
         <p class="hint karthint">Tryck på kartan eller i listan så ser du vad platsen heter. Nyp eller använd + för att zooma.</p>
@@ -895,16 +903,15 @@ function renderQuizIntro(l){
     ? `Senast <b>${rs[0].right}/${rs[0].total}</b> · bäst <b>${Math.max(...rs.map(r => r.right))}/${rs[0].total}</b> · ${rs.length} ${rs.length === 1 ? "gång" : "gånger"}`
     : "Inte kört än.";
 
-  el("wordsHead").textContent = glosor ? "Orden" : karta ? "Kartan" : "Frågorna";
+  el("wordsHead").textContent = glosor ? "Orden" : karta ? "Översikt" : "Frågorna";
   el("playAllBtn").hidden = !tts;
   el("playAllBtn").textContent = "Spela upp alla";
-  el("kartHem").hidden = el("namnBtn").hidden = !karta;
-  el("wordList").innerHTML = karta
-    ? PAIRS.map(p => `<li data-plats="${p.k}"><span class="a">${esc(p.a)}</span><span class="b">${SLAG[p.slag].ett}</span></li>`).join("")
-    : PAIRS.map(p =>
+  el("kartHem").hidden = el("namnBtn").hidden = el("urval").hidden = !karta;
+  el("quizIntro").classList.toggle("kartlage", karta);    // kartan först, som översikt
+  el("wordList").innerHTML = karta ? "" : PAIRS.map(p =>
     `<li>${tts ? sayHtml(p.a) : ""}<span class="a">${esc(p.a)}</span><span class="b">${esc(p.b)}</span></li>`
   ).join("");
-  if(karta) renderKartHem(l);
+  if(karta){ renderUrval(l); renderKartHem(l); }
   el("voiceHint").hidden = true;
   if(tts) pickVoice(l.sprak);
 }
@@ -969,7 +976,9 @@ function pickVoice(lang){
     h.hidden = !text || h.closest(".view").hidden;
   });
 }
-if(TTS) speechSynthesis.addEventListener("voiceschanged", () => pickVoice());
+if(TTS) speechSynthesis.addEventListener("voiceschanged", () => {
+  if(L && (L.typ === "glosor" || L.typ === "plugga")) pickVoice();   // bara läxor med uppläsning
+});
 
 function speak(text, rate = 0.85){
   return new Promise(done => {
@@ -1147,11 +1156,19 @@ const PLATSER = {
   "chang-jiang":         { namn:"Chang Jiang", slag:"flod", pos:[112, 30], alt:["Changjiang", "Yangtze", "Jangtse", "Jangtsekiang"] }
 };
 const SLAG = {
-  land:{ ett:"Världsdel", var:"Var ligger världsdelen?", vilken:"Vilken världsdel lyser gult?" },
-  hav: { ett:"Hav",       var:"Var ligger havet?",       vilken:"Vilket hav lyser gult?" },
-  flod:{ ett:"Flod",      var:"Var ligger floden?",      vilken:"Vilken flod lyser gult?" }
+  land:{ flera:"Världsdelar", ett:"Världsdel", var:"Var ligger världsdelen?", vilken:"Vilken världsdel lyser gult?" },
+  hav: { flera:"Hav", ett:"Hav",       var:"Var ligger havet?",       vilken:"Vilket hav lyser gult?" },
+  flod:{ flera:"Floder", ett:"Flod",      var:"Var ligger floden?",      vilken:"Vilken flod lyser gult?" }
 };
 const kartPlatser = l => (l.platser || Object.keys(PLATSER)).filter(k => PLATSER[k]);
+/* Urvalet (Världsdelar / Hav / Floder) sparas per läxa och gäller både kartan
+   på läxsidan och förhöret. */
+const slagI = l => Object.keys(SLAG).filter(sl => kartPlatser(l).some(k => PLATSER[k].slag === sl));
+function kartUrval(l){
+  const finns = slagI(l), valt = store.get("laxor:kartval:" + l.id, finns).filter(sl => finns.includes(sl));
+  return valt.length ? valt : finns;
+}
+const aktivaPlatser = l => kartPlatser(l).filter(k => kartUrval(l).includes(PLATSER[k].slag));
 const platsFranNamn = namn => Object.keys(PLATSER).find(k => PLATSER[k].namn === namn);
 const FLOD_PX = 22;                 // så nära floden (i skärmpixlar) måste man trycka
 
@@ -1225,7 +1242,7 @@ function byggKarta(){
     <use href="#kLand" class="kant"/>
     <path class="ural" d="${V.ural}"/>
     <g class="omr land">${Object.entries(V.land).map(([k, d]) => `<path data-k="${k}" d="${d}"/>`).join("")}</g>
-    <g>${Object.entries(V.floder).map(([k, d]) => `<path class="flod kant2" d="${d}"/><path class="flod" data-k="${k}" d="${d}"/>`).join("")}</g>
+    <g>${Object.entries(V.floder).map(([k, d]) => `<g data-flod="${k}"><path class="flod kant2" d="${d}"/><path class="flod" data-k="${k}" d="${d}"/></g>`).join("")}</g>
     <g class="markering"></g>
     <g class="etiketter"></g>
   </svg>
@@ -1388,6 +1405,7 @@ function ritaOverlay(){
   if(!K) return;
   const ppu = pxPerEnhet(), fs = 11.5 / ppu;
   K.svg.querySelectorAll("[data-k]").forEach(e => e.classList.remove("gul", "ratt", "fel"));
+  K.svg.querySelectorAll("[data-flod]").forEach(g => g.style.display = K.platser.includes(g.dataset.flod) ? "" : "none");
   let ring = "", lapp = "";
   const lappar = new Map();
   if(K.allaNamn) K.platser.forEach(k => lappar.set(k, ""));
@@ -1430,13 +1448,33 @@ function visaPlats(k){
   if(k) kartMarkera(k, "gul");
   el("wordList").querySelectorAll("[data-plats]").forEach(li => li.classList.toggle("vald", li.dataset.plats === k));
 }
+/* Knapparna Världsdelar / Hav / Floder: bara det som är valt visas i listan och
+   på kartan, och det är det som förhöret frågar om. Minst en måste vara vald. */
+function renderUrval(l){
+  const valt = kartUrval(l), finns = slagI(l);
+  el("urval").hidden = finns.length < 2;
+  el("urval").innerHTML = finns.map(sl => `<button type="button" data-slag="${sl}" aria-pressed="${valt.includes(sl)}">${SLAG[sl].flera}<small>${kartPlatser(l).filter(k => PLATSER[k].slag === sl).length} st</small></button>`).join("");
+  const akt = aktivaPlatser(l);
+  el("wordList").innerHTML = akt.map(k => `<li data-plats="${k}"><span class="a">${esc(PLATSER[k].namn)}</span><span class="b">${SLAG[PLATSER[k].slag].ett}</span></li>`).join("");
+  el("startBtn").textContent = `Öva på ${akt.length} ${akt.length === 1 ? "plats" : "platser"}`;
+  if(K && K.wrap.isConnected){ K.platser = akt; kartRensa(); }
+}
+el("urval").addEventListener("click", e => {
+  const b = e.target.closest("[data-slag]"); if(!b) return;
+  const valt = kartUrval(L), sl = b.dataset.slag;
+  const nytt = valt.includes(sl) ? valt.filter(x => x !== sl) : [...valt, sl];
+  if(!nytt.length) return;
+  store.set("laxor:kartval:" + L.id, nytt);
+  renderUrval(L);
+});
+
 function renderKartHem(l){
   const plats = el("kartHem").querySelector(".kartplats");
   el("startBtn").disabled = !window.VARLD;
   laddaKarta().then(() => {
     el("startBtn").disabled = false;
     if(L !== l || el("laxa").hidden) return;
-    monteraKarta(plats, kartPlatser(l));
+    monteraKarta(plats, aktivaPlatser(l));
     K.allaNamn = false;
     el("namnBtn").textContent = "Visa alla namn";
     K.onTap = t => visaPlats(kartVal(t, false));
@@ -1458,7 +1496,7 @@ el("wordList").addEventListener("click", e => {
 
 /* Förhöret: "fram" = peka ut platsen, "bak" = skriv namnet på den gula. */
 function kartFraga(p){
-  monteraKarta(el("kartWrap").firstElementChild, kartPlatser(L));
+  monteraKarta(el("kartWrap").firstElementChild, aktivaPlatser(L));
   K.allaNamn = false;
   if(p.dir === "bak") kartMarkera(p.k, "gul", false);
   K.onTap = p.dir === "fram" ? t => {
@@ -1744,6 +1782,7 @@ el("startBtn").onclick = () => {
   mode = L.typ === "glosor" || L.typ === "karta" ? document.querySelector("input[name=mode]:checked").value : "fram";
   store.set("laxor:mode", mode);
   store.set("laxor:mode:" + L.id, mode);
+  if(L.typ === "karta"){ const akt = aktivaPlatser(L); startQuiz(PAIRS.filter(p => akt.includes(p.k))); return; }
   startQuiz(PAIRS);
 };
 el("provBtn").onclick = el("provBtn2").onclick = () => { mode = "fram"; startQuiz(PAIRS); };
