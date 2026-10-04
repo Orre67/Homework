@@ -81,6 +81,28 @@ const LAXOR = [
     ]
   },
 
+  {
+    id: "spanska-v41",
+    amne: "Spanska",
+    titel: "Min familj",
+    till: "2026-10-09",
+    typ: "glosor",
+    sprak: "es",
+    glosor: [
+      { es:"soy español",    sv:"jag är spanjor",          esAlt:["soy española"], svAlt:["jag är spansk"] },
+      { es:"mis padres",     sv:"mina föräldrar" },
+      { es:"mis hermanos",   sv:"mina syskon/bröder",      svAlt:["mina syskon","mina bröder"] },
+      { es:"mis abuelos",    sv:"mina mor-/farföräldrar",  svAlt:["mina morföräldrar","mina farföräldrar","mina mor/farföräldrar",
+                                                                    "mina far/morföräldrar","mina mor- och farföräldrar","mina far- och morföräldrar"] },
+      { es:"tengo",          sv:"jag har" },
+      { es:"bailar",         sv:"dansa",                   svAlt:["att dansa"] },
+      { es:"tiene",          sv:"hon/han har",             svAlt:["han har","hon har","han/hon har"] },
+      { es:"hermana mayor",  sv:"storasyster",             esAlt:["la hermana mayor","mi hermana mayor"], svAlt:["stor syster","äldre syster"] },
+      { es:"blanco",         sv:"vit",                     esAlt:["blanca"], svAlt:["vitt"] },
+      { es:"negro",          sv:"svart",                   esAlt:["negra"] }
+    ]
+  },
+
   /* ---- Klocka: dra visarna så att klockan visar rätt tid ------------------
      antal   hur många klockslag per omgång (5 som standard)
      former  vilka slags klockslag som kommer: "hel" (Klockan 5), "over"
