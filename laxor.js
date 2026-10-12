@@ -103,6 +103,27 @@ const LAXOR = [
     ]
   },
 
+  {
+    id: "spanska-v42",
+    amne: "Spanska",
+    titel: "Familj och fritid",
+    till: "2026-10-16",
+    typ: "glosor",
+    sprak: "es",
+    glosor: [
+      { es:"años",               sv:"år",                  exakt:true },   /* ñ måste vara med – anos är ett annat ord */
+      { es:"trabajar",           sv:"arbeta",              svAlt:["att arbeta","jobba","att jobba"] },
+      { es:"también",            sv:"också",               svAlt:["även"] },
+      { es:"primo",              sv:"kusin",               esAlt:["prima","el primo"] },
+      { es:"en mi tiempo libre", sv:"på min fritid",       svAlt:["på fritiden","på min lediga tid","på min fri tid"] },
+      { es:"tío",                sv:"morbror/farbror",     esAlt:["el tío"], svAlt:["morbror","farbror","farbror/morbror","morbror eller farbror","farbror eller morbror"] },
+      { es:"hijos",              sv:"barn",                esAlt:["los hijos"], svAlt:["barnen","söner"] },
+      { es:"estar con amigos",   sv:"att vara med vänner", svAlt:["vara med vänner","att vara med kompisar","vara med kompisar","att umgås med vänner","umgås med vänner"] },
+      { es:"viajar",             sv:"resa",                svAlt:["att resa"] },
+      { es:"hermano menor",      sv:"lillebror",           esAlt:["el hermano menor","mi hermano menor"], svAlt:["lille bror","yngre bror","lillebrorsa","min lillebror"] }
+    ]
+  },
+
   /* ---- Klocka: dra visarna så att klockan visar rätt tid ------------------
      antal   hur många klockslag per omgång (5 som standard)
      former  vilka slags klockslag som kommer: "hel" (Klockan 5), "over"
