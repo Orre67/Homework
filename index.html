@@ -433,6 +433,12 @@
   .zoomknappar{position:absolute;right:6px;top:6px;display:flex;flex-direction:column;gap:6px}
   .zoomknappar button{width:38px;height:38px;border-radius:50%;border:2px solid var(--cobalt-deep);background:rgba(251,246,234,.92);font:700 1.25rem/1 var(--body);color:var(--cobalt-deep);cursor:pointer;padding:0}
   .zoomknappar button[hidden]{display:none}
+  /* Mobil och surfplatta: nyp och dra räcker, knapparna tar bara plats. */
+  @media (pointer:coarse){ .zoomknappar{display:none} }
+  /* Dator: kartläxorna får bli bredare, men inte högre än att kartan ryms i fönstret. */
+  @media (min-width:760px){
+    body.kartvy .app{max-width:max(560px, min(1080px, calc((100vh - 330px) * 1.74 + 32px)))}
+  }
   .kart-wrap{margin:14px -12px 0}
   .kart-wrap[hidden]{display:none}
   .kart-wrap + .choices{margin-top:0}
@@ -726,6 +732,8 @@ function statusOf(l){
 const VIEWS = ["home","laxa","quiz","done"];
 function show(id){
   VIEWS.forEach(v => el(v).hidden = v !== id);
+  document.body.classList.toggle("kartvy", id !== "home" && !!L && L.typ === "karta");
+  if(K && K.wrap.isConnected) requestAnimationFrame(ritaOverlay);
   if(TTS) speechSynthesis.cancel();
   playingAll = false; reading = -1;
   window.scrollTo(0, 0);
