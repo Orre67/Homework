@@ -159,6 +159,19 @@ Platserna som finns: världsdelarna `nordamerika`, `sydamerika`, `europa`, `asie
 `nilen`, `indus`, `chang-jiang`. Små stavfel godkänns men rätt stavning visas
 ("Stavas Mississippi"), och vanliga andra namn går också bra (Ishavet, Amazonas, Yangtze).
 
+**Städer** finns också som platser. De visas som prickar på kartan, svarta för
+obligatoriska och grå för extra (`extra:true` i `PLATSER`). Har läxan städer från
+flera världsdelar visas en knapp per världsdel plus "Hela världen", och kartan
+zoomar in på de städer som övas. Ligger två prickar för nära varandra när man
+trycker zoomar kartan in i stället för att räkna trycket som ett svar. Städerna
+som finns: `new-york`, `los-angeles`, `mexico-city`, `vancouver`, `toronto`,
+`ottawa`, `san-francisco`, `washington`, `brasilia`, `rio-de-janeiro`,
+`buenos-aires`, `caracas`, `kairo`, `nairobi`, `kapstaden`, `lagos`, `pretoria`,
+`johannesburg`, `canberra`, `sydney`, `wellington`, `melbourne`, `moskva`, `bagdad`,
+`teheran`, `new-delhi`, `beijing`, `seoul`, `tokyo`, `st-petersburg`, `kabul`,
+`xian`, `pyongyang`, `riyadh`, `bombay`, `bangkok`. En ny stad läggs till i
+`PLATSER` i index.html med longitud och latitud, inget skript behöver köras.
+
 Kartan ligger i `karta/`: `varld.js` (konturerna) och `relief.webp` (färgerna), båda
 gjorda av `bygg_karta.py` från Natural Earth (public domain). Den laddas bara när en
 kartläxa öppnas. Nya platser (t.ex. fler floder) kräver att skriptet körs om och att

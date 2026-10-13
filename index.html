@@ -421,6 +421,10 @@
   .karta .ring{fill:none;stroke:#FFD60A;stroke-width:3;vector-effect:non-scaling-stroke;animation:ring 1.4s ease-out infinite}
   .karta .ring.ratt{stroke:#0EA078}.karta .ring.fel{stroke:#DC3223}
   @keyframes ring{from{opacity:1;stroke-width:4}to{opacity:0;stroke-width:1}}
+  .karta .prick{fill:#15181d;stroke:#fff;stroke-width:1.6;vector-effect:non-scaling-stroke}
+  .karta .prick.extra{fill:#8d9298}
+  .karta .prick.gul{fill:#FFD60A;stroke:#15181d}
+  .karta .prick.ratt{fill:#0EA078}.karta .prick.fel{fill:#DC3223}
   .karta .etikett rect{fill:rgba(255,255,255,.92);stroke:rgba(11,27,51,.35)}
   .karta .etikett text{font-family:var(--body);font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
   .karta .etikett.ratt rect{fill:#E4F3F0;stroke:var(--verde)}
@@ -435,8 +439,9 @@
   .karthint{text-align:center;margin:8px 0 0}
   .wordlist li[data-plats]{cursor:pointer}
   .kartlage #wordsCard{order:-1}
-  .urval{display:flex;gap:6px;margin:0 0 12px}
+  .urval{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
   .urval[hidden]{display:none}
+  .urval.manga button{flex:1 1 30%}
   .urval button{flex:1;min-height:40px;padding:4px 6px;border:2px solid var(--cobalt);background:#fff;color:var(--cobalt);
     font:600 .88rem/1.1 var(--body);cursor:pointer}
   .urval button[aria-pressed="true"]{background:var(--cobalt);color:#fff}
@@ -508,7 +513,7 @@
       <div class="urval" id="urval" hidden role="group" aria-label="Visa och öva på"></div>
       <div id="kartHem" hidden>
         <div class="kartplats"></div>
-        <p class="hint karthint">Tryck på kartan eller i listan så ser du vad platsen heter. Nyp eller använd + för att zooma.</p>
+        <p class="hint karthint">Tryck på kartan eller i listan så ser du vad platsen heter. Nyp, dra eller använd + och − för att zooma och flytta.</p>
       </div>
       <ul class="wordlist" id="wordList"></ul>
       <p class="hint voiceHint" id="voiceHint" hidden></p>
@@ -667,7 +672,7 @@ function typLabel(l){
   if(l.typ === "fragor") return `Frågor · ${l.fragor.length} st`;
   if(l.typ === "plugga") return `Läsa + prov · ${(l.fragor || []).length} frågor`;
   if(l.typ === "klocka") return `Klockan · ${l.antal || 5} att ställa`;
-  if(l.typ === "karta") return `Karta · ${kartPlatser(l).length} platser`;
+  if(l.typ === "karta") return `Karta · ${kartPlatser(l).length} ${kartOrd(l, kartPlatser(l).length)}`;
   return l.steg && l.steg.length ? `Uppgift · ${l.steg.length} delar` : "Uppgift";
 }
 /* Sidorna i ett förhör: a = det som visas i "fram"-läget, b = svaret. */
@@ -884,7 +889,8 @@ function renderQuizIntro(l){
   el("startBtn").disabled = false;
   el("klockLead").hidden = !klocka && !karta;
   el("klockLead").textContent = karta
-    ? "Peka ut platserna på kartan, eller skriv namnet på den plats som lyser gult."
+    ? (baraStader(l) ? "Peka ut städerna på kartan, eller skriv namnet på staden vid den gula pricken."
+                     : "Peka ut platserna på kartan, eller skriv namnet på den plats som lyser gult.")
     : "Du får en tid i rutan. Dra visarna så att klockan visar den tiden.";
   const tts = glosor && TTS;
   el("modes").hidden = !glosor && !karta;
@@ -1153,24 +1159,77 @@ const PLATSER = {
   "amazonfloden":        { namn:"Amazonfloden", slag:"flod", pos:[-60, -3], alt:["Amazonas", "Amazon"] },
   "nilen":               { namn:"Nilen", slag:"flod", pos:[32, 22], alt:["Nil", "Nilfloden"] },
   "indus":               { namn:"Indus", slag:"flod", pos:[70, 28], alt:["Indusfloden"] },
-  "chang-jiang":         { namn:"Chang Jiang", slag:"flod", pos:[112, 30], alt:["Changjiang", "Yangtze", "Jangtse", "Jangtsekiang"] }
+  "chang-jiang":         { namn:"Chang Jiang", slag:"flod", pos:[112, 30], alt:["Changjiang", "Yangtze", "Jangtse", "Jangtsekiang"] },
+
+  /* Städer: en prick på kartan. del = världsdelen de övas under (som i
+     skolans häfte, där Moskva och S:t Petersburg står under Asien),
+     hs = huvudstad, extra = överkurs (grå prick i stället för svart). */
+  "new-york":       { namn:"New York", slag:"stad", del:"nordamerika", land:"USA", pos:[-74.01, 40.71], alt:["New York City", "NYC"] },
+  "los-angeles":    { namn:"Los Angeles", slag:"stad", del:"nordamerika", land:"USA", pos:[-118.24, 34.05], alt:["LA"] },
+  "mexico-city":    { namn:"Mexico City", slag:"stad", del:"nordamerika", land:"Mexiko", hs:true, pos:[-99.13, 19.43], alt:["Mexiko City", "Mexico", "Mexiko", "Mexikostad", "Ciudad de Mexico"] },
+  "vancouver":      { namn:"Vancouver", slag:"stad", del:"nordamerika", land:"Kanada", extra:true, pos:[-123.12, 49.28] },
+  "toronto":        { namn:"Toronto", slag:"stad", del:"nordamerika", land:"Kanada", extra:true, pos:[-79.38, 43.65] },
+  "ottawa":         { namn:"Ottawa", slag:"stad", del:"nordamerika", land:"Kanada", hs:true, extra:true, pos:[-75.70, 45.42] },
+  "san-francisco":  { namn:"San Francisco", slag:"stad", del:"nordamerika", land:"USA", extra:true, pos:[-122.42, 37.77] },
+  "washington":     { namn:"Washington DC", slag:"stad", del:"nordamerika", land:"USA", hs:true, extra:true, pos:[-77.04, 38.91], alt:["Washington", "Washington D C"] },
+  "brasilia":       { namn:"Brasilia", slag:"stad", del:"sydamerika", land:"Brasilien", hs:true, pos:[-47.88, -15.79] },
+  "rio-de-janeiro": { namn:"Rio de Janeiro", slag:"stad", del:"sydamerika", land:"Brasilien", pos:[-43.17, -22.91], alt:["Rio"] },
+  "buenos-aires":   { namn:"Buenos Aires", slag:"stad", del:"sydamerika", land:"Argentina", hs:true, pos:[-58.38, -34.60] },
+  "caracas":        { namn:"Caracas", slag:"stad", del:"sydamerika", land:"Venezuela", hs:true, extra:true, pos:[-66.90, 10.48], alt:["Karakas"] },
+  "kairo":          { namn:"Kairo", slag:"stad", del:"afrika", land:"Egypten", hs:true, pos:[31.24, 30.04], alt:["Cairo"] },
+  "nairobi":        { namn:"Nairobi", slag:"stad", del:"afrika", land:"Kenya", hs:true, pos:[36.82, -1.29] },
+  "kapstaden":      { namn:"Kapstaden", slag:"stad", del:"afrika", land:"Sydafrika", hs:true, pos:[18.42, -33.92], alt:["Kapstad", "Cape Town"] },
+  "lagos":          { namn:"Lagos", slag:"stad", del:"afrika", land:"Nigeria", extra:true, pos:[3.38, 6.52] },
+  "pretoria":       { namn:"Pretoria", slag:"stad", del:"afrika", land:"Sydafrika", hs:true, extra:true, pos:[28.19, -25.75] },
+  "johannesburg":   { namn:"Johannesburg", slag:"stad", del:"afrika", land:"Sydafrika", extra:true, pos:[28.05, -26.20], alt:["Joburg", "Jo'burg"] },
+  "canberra":       { namn:"Canberra", slag:"stad", del:"oceanien", land:"Australien", hs:true, pos:[149.13, -35.28] },
+  "sydney":         { namn:"Sydney", slag:"stad", del:"oceanien", land:"Australien", pos:[151.21, -33.87] },
+  "wellington":     { namn:"Wellington", slag:"stad", del:"oceanien", land:"Nya Zeeland", hs:true, pos:[174.78, -41.29] },
+  "melbourne":      { namn:"Melbourne", slag:"stad", del:"oceanien", land:"Australien", extra:true, pos:[144.96, -37.81] },
+  "moskva":         { namn:"Moskva", slag:"stad", del:"asien", land:"Ryssland", hs:true, pos:[37.62, 55.76], alt:["Moscow", "Moskau"] },
+  "bagdad":         { namn:"Bagdad", slag:"stad", del:"asien", land:"Irak", hs:true, pos:[44.37, 33.32], alt:["Baghdad"] },
+  "teheran":        { namn:"Teheran", slag:"stad", del:"asien", land:"Iran", hs:true, pos:[51.39, 35.69], alt:["Tehran"] },
+  "new-delhi":      { namn:"New Delhi", slag:"stad", del:"asien", land:"Indien", hs:true, pos:[77.21, 28.61], alt:["Delhi", "Nya Delhi"] },
+  "beijing":        { namn:"Beijing", slag:"stad", del:"asien", land:"Kina", hs:true, pos:[116.41, 39.90], alt:["Peking", "Bejing"] },
+  "seoul":          { namn:"Seoul", slag:"stad", del:"asien", land:"Sydkorea", hs:true, pos:[126.98, 37.57], alt:["Söul", "Soul"] },
+  "tokyo":          { namn:"Tokyo", slag:"stad", del:"asien", land:"Japan", hs:true, pos:[139.69, 35.69], alt:["Tokio"] },
+  "st-petersburg":  { namn:"S:t Petersburg", slag:"stad", del:"asien", land:"Ryssland", extra:true, pos:[30.34, 59.93], alt:["St Petersburg", "Sankt Petersburg", "St. Petersburg", "Petersburg", "S t Petersburg"] },
+  "kabul":          { namn:"Kabul", slag:"stad", del:"asien", land:"Afghanistan", hs:true, extra:true, pos:[69.21, 34.56] },
+  "xian":           { namn:"Xi'an", slag:"stad", del:"asien", land:"Kina", extra:true, pos:[108.94, 34.34], alt:["Xian", "Xi an", "Xi’an"] },
+  "pyongyang":      { namn:"Pyongyang", slag:"stad", del:"asien", land:"Nordkorea", hs:true, extra:true, pos:[125.76, 39.04], alt:["Pjongjang", "Pyong yang"] },
+  "riyadh":         { namn:"Riyadh", slag:"stad", del:"asien", land:"Saudiarabien", hs:true, extra:true, pos:[46.68, 24.71], alt:["Riyad", "Riad", "Rijad"] },
+  "bombay":         { namn:"Bombay", slag:"stad", del:"asien", land:"Indien", extra:true, pos:[72.88, 19.08], alt:["Mumbai"] },
+  "bangkok":        { namn:"Bangkok", slag:"stad", del:"asien", land:"Thailand", hs:true, extra:true, pos:[100.50, 13.76] }
 };
 const SLAG = {
   land:{ flera:"Världsdelar", ett:"Världsdel", var:"Var ligger världsdelen?", vilken:"Vilken världsdel lyser gult?" },
   hav: { flera:"Hav", ett:"Hav",       var:"Var ligger havet?",       vilken:"Vilket hav lyser gult?" },
-  flod:{ flera:"Floder", ett:"Flod",      var:"Var ligger floden?",      vilken:"Vilken flod lyser gult?" }
+  flod:{ flera:"Floder", ett:"Flod",      var:"Var ligger floden?",      vilken:"Vilken flod lyser gult?" },
+  stad:{ flera:"Städer", ett:"Stad",       var:"Var ligger staden?",      vilken:"Vilken stad har den gula pricken?" }
 };
+/* Urvalsknapparna: världsdelar/hav/floder, och för städerna en knapp per
+   världsdel. */
+const GRUPPER = { land:"Världsdelar", hav:"Hav", flod:"Floder",
+  nordamerika:"Nordamerika", sydamerika:"Sydamerika", afrika:"Afrika", asien:"Asien", oceanien:"Oceanien" };
+const grupp = k => PLATSER[k].slag === "stad" ? PLATSER[k].del : PLATSER[k].slag;
+const arStad = k => PLATSER[k].slag === "stad";
+const baraStader = l => kartPlatser(l).every(arStad);
+const kartOrd = (l, n) => baraStader(l) ? (n === 1 ? "stad" : "städer") : (n === 1 ? "plats" : "platser");
+const platsInfo = k => arStad(k) ? PLATSER[k].land + (PLATSER[k].hs ? " · huvudstad" : "") : SLAG[PLATSER[k].slag].ett;
 const kartPlatser = l => (l.platser || Object.keys(PLATSER)).filter(k => PLATSER[k]);
 /* Urvalet (Världsdelar / Hav / Floder) sparas per läxa och gäller både kartan
    på läxsidan och förhöret. */
-const slagI = l => Object.keys(SLAG).filter(sl => kartPlatser(l).some(k => PLATSER[k].slag === sl));
+const slagI = l => Object.keys(GRUPPER).filter(g => kartPlatser(l).some(k => grupp(k) === g));
 function kartUrval(l){
   const finns = slagI(l), valt = store.get("laxor:kartval:" + l.id, finns).filter(sl => finns.includes(sl));
   return valt.length ? valt : finns;
 }
-const aktivaPlatser = l => kartPlatser(l).filter(k => kartUrval(l).includes(PLATSER[k].slag));
+const aktivaPlatser = l => kartPlatser(l).filter(k => kartUrval(l).includes(grupp(k)));
 const platsFranNamn = namn => Object.keys(PLATSER).find(k => PLATSER[k].namn === namn);
 const FLOD_PX = 22;                 // så nära floden (i skärmpixlar) måste man trycka
+const STAD_PX = 26;                 // och så nära en stadsprick
+/* Städer som ligger tätt (Pretoria/Johannesburg) kräver att man kan zooma långt. */
+const minBredd = () => window.VARLD.w / (K && K.platser.some(arStad) ? 40 : 10);
 
 let kartLaddas = null;
 function laddaKarta(){
@@ -1270,21 +1329,38 @@ function byggKarta(){
   window.addEventListener("resize", () => K.wrap.isConnected && ritaOverlay());
 }
 
-function monteraKarta(plats, platser){
+function monteraKarta(plats, platser, behallVy){
   if(!K) byggKarta();
   plats.appendChild(K.wrap);
   K.platser = platser;
-  K.vb = { x:0, y:0, w:window.VARLD.w, h:window.VARLD.h };
+  if(!behallVy) kartPassa();
   K.onTap = null;
   kartRensa();
   kartVy();
+}
+/* Städer: börja inzoomad på de städer som övas (en världsdel eller alla).
+   Andra platser: hela världen. */
+function kartPassa(){
+  const V = window.VARLD, st = K.platser.filter(arStad);
+  if(!st.length){ K.vb = { x:0, y:0, w:V.w, h:V.h }; return; }
+  const xs = st.map(k => K.pos[k][0]), ys = st.map(k => K.pos[k][1]), m = 28;
+  const x0 = Math.min(...xs) - m, x1 = Math.max(...xs) + m, y0 = Math.min(...ys) - m, y1 = Math.max(...ys) + m;
+  const w = Math.min(V.w, Math.max(x1 - x0, (y1 - y0) * V.w / V.h, V.w / 6)), h = w * V.h / V.w;
+  K.vb = { x:(x0 + x1) / 2 - w / 2, y:(y0 + y1) / 2 - h / 2, w, h };
+}
+/* Flytta kartan så att punkten syns, utan att ändra zoomen. */
+function visaPunkt([x, y]){
+  const v = K.vb, mx = v.w * 0.12, my = v.h * 0.12;
+  if(x < v.x + mx || x > v.x + v.w - mx || y < v.y + my || y > v.y + v.h - my){
+    K.vb = { ...v, x:x - v.w / 2, y:y - v.h / 2 };
+  }
 }
 
 const pxPerEnhet = () => K.svg.getBoundingClientRect().width / K.vb.w || 0.35;
 
 function kartVy(){
   const V = window.VARLD, v = K.vb;
-  v.w = Math.min(V.w, Math.max(V.w / 10, v.w)); v.h = v.w * V.h / V.w;
+  v.w = Math.min(V.w, Math.max(minBredd(), v.w)); v.h = v.w * V.h / V.w;
   v.x = Math.min(Math.max(v.x, 0), V.w - v.w);
   v.y = Math.min(Math.max(v.y, 0), V.h - v.h);
   K.svg.setAttribute("viewBox", `${v.x} ${v.y} ${v.w} ${v.h}`);
@@ -1298,7 +1374,7 @@ function zooma(f, cx, cy){
   const v = K.vb;
   if(cx === undefined){ cx = v.x + v.w / 2; cy = v.y + v.h / 2; }
   const ax = (cx - v.x) / v.w, ay = (cy - v.y) / v.h;
-  const w = Math.min(window.VARLD.w, Math.max(window.VARLD.w / 10, v.w / f)), h = w * v.h / v.w;
+  const w = Math.min(window.VARLD.w, Math.max(minBredd(), v.w / f)), h = w * v.h / v.w;
   K.vb = { x:cx - ax * w, y:cy - ay * h, w, h };
   kartVy();
 }
@@ -1329,7 +1405,7 @@ function kartGester(){
     const r = svg.getBoundingClientRect();
     if(pek.size >= 2 && g.nyp){
       const n = g.nyp, [mx, my] = mitt();
-      const w = Math.min(window.VARLD.w, Math.max(window.VARLD.w / 10, n.vb.w * n.d / avst()));
+      const w = Math.min(window.VARLD.w, Math.max(minBredd(), n.vb.w * n.d / avst()));
       const h = w * n.vb.h / n.vb.w;
       K.vb = { x:n.punkt[0] - (mx - r.left) / r.width * w, y:n.punkt[1] - (my - r.top) / r.height * h, w, h };
       kartVy();
@@ -1366,7 +1442,7 @@ function kartGester(){
   K.wrap.addEventListener("gesturestart", e => e.preventDefault());   // Safari: zooma kartan, inte sidan
   K.wrap.querySelector(".zoomknappar").addEventListener("click", e => {
     const b = e.target.closest("[data-zoom]"); if(!b) return;
-    if(b.dataset.zoom === "hel"){ K.vb = { x:0, y:0, w:window.VARLD.w, h:window.VARLD.h }; kartVy(); }
+    if(b.dataset.zoom === "hel"){ kartPassa(); kartVy(); }        // städerna som övas, annars hela världen
     else zooma(b.dataset.zoom === "in" ? 1.8 : 1 / 1.8);
   });
 }
@@ -1381,11 +1457,24 @@ function kartTraff(x, y){
     if(d < bast){ bast = d; flod = k; }
   }
   const i_ = o => Object.keys(o).find(k => med(k) && inuti(o[k], x, y)) || null;
-  return { flod, flodPx:bast * pxPerEnhet(), land:i_(K.land), hav:i_(K.hav) };
+  /* Närmaste stadsprick. Ligger två prickar för nära varandra för att se vilken
+     man menade zoomar kartan in i stället. */
+  const ppu = pxPerEnhet();
+  const st = K.platser.filter(arStad).map(k => [k, Math.hypot(K.pos[k][0] - x, K.pos[k][1] - y) * ppu]).sort((a, b) => a[1] - b[1]);
+  const stad = st[0] && st[0][1] <= STAD_PX ? st[0][0] : null;
+  const tvetydig = !!(stad && st[1] && st[1][1] <= STAD_PX && st[1][1] - st[0][1] < 14 && K.vb.w > minBredd() * 1.05);
+  return { x, y, flod, flodPx:bast * ppu, land:i_(K.land), hav:i_(K.hav), stad, tvetydig };
+}
+/* true = trycket zoomade in kartan och ska inte räknas som ett svar. */
+function zoomaVidTvetydig(t){
+  if(!t.tvetydig) return false;
+  zooma(3, t.x, t.y);
+  return true;
 }
 /* Det man pekade på. Frågar man efter en flod räknas floden först. */
 function kartVal(t, forstFlod){
   const nara = t.flodPx <= FLOD_PX ? t.flod : null;
+  if(t.stad) return t.stad;
   return (forstFlod ? nara || t.land || t.hav : t.land || t.hav || nara) || null;
 }
 
@@ -1407,11 +1496,15 @@ function ritaOverlay(){
   K.svg.querySelectorAll("[data-k]").forEach(e => e.classList.remove("gul", "ratt", "fel"));
   K.svg.querySelectorAll("[data-flod]").forEach(g => g.style.display = K.platser.includes(g.dataset.flod) ? "" : "none");
   let ring = "", lapp = "";
-  const lappar = new Map();
+  const lappar = new Map(), klassAv = new Map(K.markerade.map(m => [m.k, m.klass]));
+  K.platser.filter(arStad).forEach(k => {                // alla stadsprickar syns
+    const [x, y] = K.pos[k];
+    ring += `<circle class="prick${PLATSER[k].extra ? " extra" : ""} ${klassAv.get(k) || ""}" cx="${x}" cy="${y}" r="${5.5 / ppu}"/>`;
+  });
   if(K.allaNamn) K.platser.forEach(k => lappar.set(k, ""));
   K.markerade.forEach(m => {
     K.svg.querySelectorAll(`[data-k="${m.k}"]`).forEach(e => e.classList.add(m.klass));
-    if(PLATSER[m.k].slag === "flod"){
+    if(PLATSER[m.k].slag === "flod" || arStad(m.k)){
       const [x, y] = K.pos[m.k];
       ring += `<circle class="ring ${m.klass}" cx="${x}" cy="${y}" r="${14 / ppu}"/>`;
     }
@@ -1421,6 +1514,7 @@ function ritaOverlay(){
     const P = PLATSER[k];
     let [x, y] = K.pos[k];
     if(P.slag === "flod") y -= 20 / ppu;             // lappen ovanför floden, inte på den
+    if(P.slag === "stad") y -= 19 / ppu;             // och ovanför pricken
     const w = P.namn.length * fs * 0.56 + fs, h = fs * 1.6;
     lapp += `<g class="etikett ${klass}"><rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="${h / 2}" stroke-width="${1 / ppu}"/>
       <text x="${x}" y="${y}" font-size="${fs}">${esc(P.namn)}</text></g>`;
@@ -1451,18 +1545,25 @@ function visaPlats(k){
 /* Knapparna Världsdelar / Hav / Floder: bara det som är valt visas i listan och
    på kartan, och det är det som förhöret frågar om. Minst en måste vara vald. */
 function renderUrval(l){
-  const valt = kartUrval(l), finns = slagI(l);
+  const valt = kartUrval(l), finns = slagI(l), manga = finns.length > 3, alla = valt.length === finns.length;
   el("urval").hidden = finns.length < 2;
-  el("urval").innerHTML = finns.map(sl => `<button type="button" data-slag="${sl}" aria-pressed="${valt.includes(sl)}">${SLAG[sl].flera}<small>${kartPlatser(l).filter(k => PLATSER[k].slag === sl).length} st</small></button>`).join("");
+  el("urval").classList.toggle("manga", manga);
+  /* Många världsdelar: "Hela världen" är intryckt när alla är valda, annars de valda delarna. */
+  el("urval").innerHTML = finns.map(g => `<button type="button" data-slag="${g}" aria-pressed="${valt.includes(g) && !(manga && alla)}">${GRUPPER[g]}<small>${kartPlatser(l).filter(k => grupp(k) === g).length} st</small></button>`).join("")
+    + (manga ? `<button type="button" data-slag="*" aria-pressed="${alla}">Hela världen<small>${kartPlatser(l).length} st</small></button>` : "");
   const akt = aktivaPlatser(l);
-  el("wordList").innerHTML = akt.map(k => `<li data-plats="${k}"><span class="a">${esc(PLATSER[k].namn)}</span><span class="b">${SLAG[PLATSER[k].slag].ett}</span></li>`).join("");
-  el("startBtn").textContent = `Öva på ${akt.length} ${akt.length === 1 ? "plats" : "platser"}`;
-  if(K && K.wrap.isConnected){ K.platser = akt; kartRensa(); }
+  el("wordList").innerHTML = akt.map(k => `<li data-plats="${k}"><span class="a">${esc(PLATSER[k].namn)}</span><span class="b">${esc(platsInfo(k))}</span></li>`).join("");
+  el("startBtn").textContent = `Öva på ${akt.length} ${kartOrd(l, akt.length)}`;
+  if(K && K.wrap.isConnected){ K.platser = akt; kartPassa(); kartRensa(); kartVy(); }
 }
 el("urval").addEventListener("click", e => {
   const b = e.target.closest("[data-slag]"); if(!b) return;
-  const valt = kartUrval(L), sl = b.dataset.slag;
-  const nytt = valt.includes(sl) ? valt.filter(x => x !== sl) : [...valt, sl];
+  const valt = kartUrval(L), sl = b.dataset.slag, finns = slagI(L);
+  /* Med världsdelsknappar (städer): "Hela världen" väljer alla, och trycker man
+     på en världsdel när alla är valda blir det bara den. */
+  const nytt = sl === "*" ? finns
+    : finns.length > 3 && valt.length === finns.length ? [sl]
+    : valt.includes(sl) ? valt.filter(x => x !== sl) : [...valt, sl];
   if(!nytt.length) return;
   store.set("laxor:kartval:" + L.id, nytt);
   renderUrval(L);
@@ -1477,7 +1578,7 @@ function renderKartHem(l){
     monteraKarta(plats, aktivaPlatser(l));
     K.allaNamn = false;
     el("namnBtn").textContent = "Visa alla namn";
-    K.onTap = t => visaPlats(kartVal(t, false));
+    K.onTap = t => { if(!zoomaVidTvetydig(t)) visaPlats(kartVal(t, false)); };
     requestAnimationFrame(ritaOverlay);
   }).catch(() => {
     plats.innerHTML = '<p class="hint">Kartan kunde inte laddas. Kolla internet och ladda om sidan.</p>';
@@ -1496,11 +1597,16 @@ el("wordList").addEventListener("click", e => {
 
 /* Förhöret: "fram" = peka ut platsen, "bak" = skriv namnet på den gula. */
 function kartFraga(p){
-  monteraKarta(el("kartWrap").firstElementChild, aktivaPlatser(L));
+  const plats = el("kartWrap").firstElementChild;
+  /* Mellan frågorna står kartan kvar där man har zoomat. */
+  monteraKarta(plats, aktivaPlatser(L), !!K && K.wrap.parentNode === plats && i > 0);
   K.allaNamn = false;
-  if(p.dir === "bak") kartMarkera(p.k, "gul", false);
+  if(p.dir === "bak"){
+    if(arStad(p.k)){ visaPunkt(K.pos[p.k]); kartVy(); }
+    kartMarkera(p.k, "gul", false);
+  }
   K.onTap = p.dir === "fram" ? t => {
-    if(answered) return;
+    if(answered || zoomaVidTvetydig(t)) return;
     const k = kartVal(t, p.slag === "flod");
     if(k) check(false, PLATSER[k].namn);
   } : null;
@@ -1648,7 +1754,7 @@ function check(revealed, picked){
   const correct = !revealed && given !== "" && isCorrect(p, given);
   const facit = p.dir === "fram" ? p.b : p.a;
 
-  results[i] = { q:p.a, a:p.karta ? SLAG[p.slag].ett : p.b, dir:p.dir, correct, given };
+  results[i] = { q:p.a, a:p.karta ? (arStad(p.k) ? PLATSER[p.k].land : SLAG[p.slag].ett) : p.b, dir:p.dir, correct, given };
   if(mode === "lyssna") wordEl.textContent = p.a;
   answered = true;
   input.classList.add("locked");
