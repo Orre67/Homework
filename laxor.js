@@ -69,6 +69,28 @@ const LAXOR = [
     ]
   },
 
+  {
+    id: "spanska-v45",
+    amne: "Spanska",
+    titel: "Djur",
+    till: "2026-11-06",
+    typ: "glosor",
+    sprak: "es",
+    glosor: [
+      { es:"pájaro",  sv:"fågel",    esAlt:["el pájaro"] },
+      { es:"caballo", sv:"häst",     esAlt:["el caballo"] },
+      { es:"perro",   sv:"hund",     esAlt:["el perro"] },
+      { es:"rata",    sv:"råtta",    esAlt:["la rata"] },
+      { es:"conejo",  sv:"kanin",    esAlt:["el conejo"] },
+      { es:"araña",   sv:"spindel",  esAlt:["la araña"] },
+      { es:"vaca",    sv:"ko",       esAlt:["la vaca"] },
+      { es:"gato",    sv:"katt",     esAlt:["el gato"] },
+      { es:"cabra",   sv:"får",      esAlt:["la cabra"], svAlt:["get"] },   /* cabra är egentligen get, läraren skrev får */
+      { es:"oso",     sv:"björn",    esAlt:["el oso"] },
+      { es:"león",    sv:"lejon",    esAlt:["el león"] }
+    ]
+  },
+
   /* ---- Klocka: dra visarna så att klockan visar rätt tid ------------------
      antal   hur många klockslag per omgång (5 som standard)
      former  vilka slags klockslag som kommer: "hel" (Klockan 5), "over"
