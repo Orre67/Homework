@@ -91,6 +91,27 @@ const LAXOR = [
     ]
   },
 
+  {
+    id: "spanska-v46",
+    amne: "Spanska",
+    titel: "Mi prima",
+    till: "2026-11-13",
+    typ: "glosor",
+    sprak: "es",
+    glosor: [
+      { es:"¿no?",    sv:"eller hur?",             svAlt:["inte sant","va"] },
+      { es:"soy yo",  sv:"det är jag" },
+      { es:"morena",  sv:"mörkhyad/mörkhårig",     esAlt:["moreno"], svAlt:["mörkhyad","mörkhårig","mörkhårig/mörkhyad","brunett"] },
+      { es:"la foto", sv:"fotot",                  esAlt:["foto"], svAlt:["foto","bilden","fotografiet"] },
+      { es:"la chica",sv:"tjejen",                 esAlt:["chica"], svAlt:["tjej","flickan","flicka"] },
+      { es:"¡claro!", sv:"såklart!",               svAlt:["så klart","självklart","klart"] },
+      { es:"veo",     sv:"jag ser" },
+      { es:"baja",    sv:"kort (tjej)",            svAlt:["kort","liten"] },
+      { es:"rubia",   sv:"blond (tjej)",           svAlt:["blond"] },
+      { es:"oye",     sv:"hörru, lyssna",          svAlt:["hörru","lyssna","hör du","hörru lyssna","hallå"] }
+    ]
+  },
+
   /* ---- Klocka: dra visarna så att klockan visar rätt tid ------------------
      antal   hur många klockslag per omgång (5 som standard)
      former  vilka slags klockslag som kommer: "hel" (Klockan 5), "over"
