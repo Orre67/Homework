@@ -112,6 +112,29 @@ const LAXOR = [
     ]
   },
 
+  {
+    id: "spanska-v47",
+    amne: "Spanska",
+    titel: "Gramática – heter, bor, har, är",
+    till: "2026-11-20",
+    typ: "glosor",
+    sprak: "es",
+    glosor: [
+      { es:"llamo",  sv:"jag heter",       esAlt:["me llamo"] },
+      { es:"llamas", sv:"du heter",        esAlt:["te llamas"] },
+      { es:"llama",  sv:"hen/den heter",   esAlt:["se llama"], svAlt:["hen heter", "den heter", "han heter", "hon heter", "det heter", "han/hon heter", "hon/han heter", "han/hon/den heter", "hen/den heter"] },
+      { es:"vivo",   sv:"jag bor" },
+      { es:"vives",  sv:"du bor" },
+      { es:"vive",   sv:"hen/den bor",     svAlt:["hen bor", "den bor", "han bor", "hon bor", "det bor", "han/hon bor", "hon/han bor", "han/hon/den bor", "hen/den bor"] },
+      { es:"tengo",  sv:"jag har" },
+      { es:"tienes", sv:"du har" },
+      { es:"tiene",  sv:"hen/den har",     svAlt:["hen har", "den har", "han har", "hon har", "det har", "han/hon har", "hon/han har", "han/hon/den har", "hen/den har"] },
+      { es:"soy",    sv:"jag är" },
+      { es:"eres",   sv:"du är" },
+      { es:"es",     sv:"hen/den är",      svAlt:["hen är", "den är", "han är", "hon är", "det är", "han/hon är", "hon/han är", "han/hon/den är", "hen/den är"] }
+    ]
+  },
+
   /* ---- Klocka: dra visarna så att klockan visar rätt tid ------------------
      antal   hur många klockslag per omgång (5 som standard)
      former  vilka slags klockslag som kommer: "hel" (Klockan 5), "over"
